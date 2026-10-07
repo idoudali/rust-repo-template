@@ -32,6 +32,11 @@ release = true
 changelog_update = false
 git_tag_enable = false
 
+[[package]]
+name = "xtask"
+# Repo tooling, never released.
+release = false
+
 [changelog]
 # One section per conventional commit type that cocogitto accepts (cog.toml).
 # The HTML comments only fix the section order; `body` strips them.
