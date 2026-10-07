@@ -33,3 +33,10 @@ broken_intra_doc_links = "warn"
 # Whole groups at warn; CI turns warnings into errors with -D warnings.
 pedantic = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
+
+# Release binaries (built by dist): small, single codegen unit, no debug info.
+[profile.dist]
+inherits = "release"
+lto = "thin"
+codegen-units = 1
+strip = true

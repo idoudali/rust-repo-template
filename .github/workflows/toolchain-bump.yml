@@ -21,7 +21,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v6.1.0
         with:
           persist-credentials: true
       - uses: jdx/mise-action@v3.6.3
