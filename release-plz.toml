@@ -1,0 +1,30 @@
+# release-plz owns versioning: on every push to main it opens or updates a
+# Release PR (version bump, Cargo.lock, CHANGELOG.md). When that PR merges it
+# pushes the `v<version>` tag, and dist's release.yml builds the binaries and
+# creates the GitHub Release. Nothing is published to crates.io.
+
+[workspace]
+# GitHub only: never `cargo publish`.
+publish = false
+# dist creates the GitHub Release from the tag.
+git_release_enable = false
+semver_check = false
+pr_labels = ["release"]
+# Both crates share the workspace version.
+version_group = "workspace"
+
+[[package]]
+name = "rust-repo-template-cli"
+# The CLI is the released app: its changelog is the repo changelog and its
+# tag (`v<version>`) is what dist listens for.
+release = true
+changelog_path = "CHANGELOG.md"
+changelog_include = ["rust-repo-template"]
+git_tag_enable = true
+git_tag_name = "v{{ version }}"
+
+[[package]]
+name = "rust-repo-template"
+release = true
+changelog_update = false
+git_tag_enable = false
