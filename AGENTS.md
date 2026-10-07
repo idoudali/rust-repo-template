@@ -15,6 +15,7 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 | ------------------------------- | ----------------------------------------------------- |
 | `crates/rust-repo-template`     | Library crate: all logic, pure and unit-tested        |
 | `crates/rust-repo-template-cli` | Binary: argument parsing and output only              |
+| `xtask`                         | Repo maintenance (`cargo xtask rename`); not released |
 | `crates/*/tests/`               | Integration tests (`assert_cmd` for the CLI)          |
 | `mise.toml`                     | Tool versions and tasks; `mise tasks` lists them      |
 
