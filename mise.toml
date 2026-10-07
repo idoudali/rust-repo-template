@@ -105,7 +105,7 @@ run = "rumdl check ."
 
 [tasks.verify]
 description = "Run every check CI runs"
-depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint", "test", "coverage"]
+depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint", "test", "coverage", "docs"]
 
 [tasks.test]
 description = "Run unit, integration and doc tests"
@@ -132,3 +132,11 @@ run = "prek run --all-files"
 [tasks.check]
 description = "Type-check every target (used by the MSRV job)"
 run = "cargo check --workspace --all-targets --all-features --locked"
+
+[tasks.docs]
+description = "Build the rustdoc site with warnings denied; output in target/doc"
+env = { RUSTDOCFLAGS = "-D warnings" }
+run = [
+  "cargo doc --workspace --no-deps --all-features --locked",
+  "echo '<meta http-equiv=\"refresh\" content=\"0; url=rust_repo_template/index.html\">' > target/doc/index.html",
+]

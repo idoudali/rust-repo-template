@@ -80,6 +80,24 @@ jobs:
             target/llvm-cov/html
           retention-days: 14
 
+  docs:
+    name: rustdoc
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # The tag is a content hash of the image inputs (toolchain-image.yml).
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@v2.9.2
+      - run: mise run docs
+
   deny:
     name: cargo deny
     needs: toolchain

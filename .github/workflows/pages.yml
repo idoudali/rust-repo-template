@@ -1,0 +1,56 @@
+name: pages
+
+# Publishes the rustdoc site (API reference and guides) to GitHub Pages.
+# One-time repo setting: Pages source "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  toolchain:
+    name: toolchain image
+    uses: ./.github/workflows/toolchain-image.yml
+    permissions:
+      contents: read
+      packages: write
+
+  build:
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # The tag is a content hash of the image inputs (toolchain-image.yml).
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - run: mise run docs
+      - uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: target/doc
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-26.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4.0.5
