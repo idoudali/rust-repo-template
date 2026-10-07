@@ -103,4 +103,18 @@ run = "rumdl check ."
 
 [tasks.verify]
 description = "Run every check CI runs"
-depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint"]
+depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint", "test", "coverage"]
+
+[tasks.test]
+description = "Run unit, integration and doc tests"
+run = [
+  "cargo nextest run --workspace --all-features --locked",
+  "cargo test --doc --workspace --all-features --locked",
+]
+
+[tasks.coverage]
+description = "Line coverage with a 100% gate; writes lcov.info and target/llvm-cov/html"
+run = [
+  "cargo llvm-cov nextest --workspace --all-features --locked --fail-under-lines 100 --lcov --output-path lcov.info",
+  "cargo llvm-cov report --html",
+]
