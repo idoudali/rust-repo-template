@@ -1,0 +1,16 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+repository = "https://github.com/idoudali/rust-repo-template"
+authors = ["Ioannis Doudalis"]
+publish = false
+
+[workspace.dependencies]
+rust-repo-template = { path = "crates/rust-repo-template", version = "0.1.0" }
+clap = { version = "4.6", features = ["derive"] }
