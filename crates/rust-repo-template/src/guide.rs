@@ -11,3 +11,6 @@ pub mod development {}
 
 #[doc = include_str!("../docs/releasing.md")]
 pub mod releasing {}
+
+#[doc = include_str!("../docs/cli.md")]
+pub mod cli {}
