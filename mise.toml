@@ -162,3 +162,7 @@ run = "dist plan"
 [tasks.dist-generate]
 description = "Regenerate .github/workflows/release.yml after changing dist-workspace.toml"
 run = "dist generate"
+
+[tasks.dist-check]
+description = "Fail if release.yml is out of date with dist-workspace.toml"
+run = "dist generate --check"
