@@ -82,6 +82,10 @@ fn info_prints_text() {
             "version: {}",
             rust_repo_template::VERSION
         )))
+        .stdout(contains(format!(
+            "target:  {}",
+            rust_repo_template::Info::current().target
+        )))
         .stdout(contains(format!("os:      {}", std::env::consts::OS)));
 }
 

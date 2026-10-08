@@ -28,11 +28,11 @@ assert_eq!(rust_repo_template::greeting("Ada", true), "HELLO, ADA!");
 rust-repo-template info [--json]
 ```
 
-Prints the version, operating system, and architecture of the binary, as text or as one line of JSON.
+Prints the version, Rust target triple, operating system, and architecture of the binary, as text or as one line of JSON. The target is recorded at build time by the library's `build.rs`.
 
 ```text
 $ rust-repo-template info --json
-{"version":"0.1.0","os":"linux","arch":"x86_64"}
+{"version":"0.1.0","target":"x86_64-unknown-linux-musl","os":"linux","arch":"x86_64"}
 ```
 
 ```rust
