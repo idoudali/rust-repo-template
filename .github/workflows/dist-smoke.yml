@@ -38,7 +38,15 @@ jobs:
         run: |
           set -euo pipefail
           for target in ${TARGETS}; do
-            archive=$(find dist -maxdepth 1 -name "rust-repo-template-cli-${target}.tar.*" -o -maxdepth 1 -name "rust-repo-template-cli-${target}.zip" | head -n 1)
+            # Exact extensions: a glob would also match the .sha256 files.
+            archive=""
+            for ext in tar.xz tar.gz zip; do
+              if [ -f "dist/rust-repo-template-cli-${target}.${ext}" ]; then
+                archive="dist/rust-repo-template-cli-${target}.${ext}"
+                break
+              fi
+            done
+            test -n "${archive}"
             echo "::group::${archive}"
             out="unpacked/${target}"
             mkdir -p "${out}"
