@@ -1,0 +1,68 @@
+# Single source of tool versions and tasks for this repo.
+# The toolchain image (docker/toolchain.Dockerfile), CI, and developer
+# machines all install from this file. Bump a version here and nowhere else.
+# Rust is pinned twice on purpose: rust-toolchain.toml is read by rustup,
+# editors and dist; `mise run toolchain-check` keeps the two in sync.
+
+[tools]
+# One Rust here: mise exports RUSTUP_TOOLCHAIN for it, so a second entry
+# would become the active toolchain. The MSRV lives in mise.msrv.toml.
+rust = { version = "1.97.0", components = "rustfmt,clippy,llvm-tools-preview", profile = "minimal" }
+# Lets the cargo: backend download prebuilt binaries instead of compiling.
+cargo-binstall = "1.25.2"
+"cargo:cargo-nextest" = "0.9.146"
+"cargo:cargo-llvm-cov" = "0.9.1"
+"cargo:cargo-deny" = "0.20.2"
+"cargo:cargo-hack" = "0.6.45"
+"cargo:cargo-dist" = "0.32.0"
+"cargo:cargo-cyclonedx" = "0.5.9"
+"cargo:release-plz" = "0.3.170"
+"cargo:cocogitto" = "7.0.0"
+"cargo:prek" = "0.5.5"
+"cargo:typos-cli" = "1.51.1"
+"cargo:rumdl" = "0.2.78"
+"cargo:zizmor" = "1.30.1"
+actionlint = "1.7.12"
+shellcheck = "0.11.0"
+
+[settings]
+# Prefer prebuilt binaries for cargo: tools.
+cargo.binstall = true
+# mise.lock pins each tool's exact version, download URL and checksum for
+# every platform below. Refresh it with `mise run lock` after changing
+# [tools]; the image build installs with `--locked` and fails on a stale lock.
+lockfile = true
+lockfile_platforms = ["linux-x64", "linux-arm64", "macos-x64", "macos-arm64", "windows-x64"]
+
+[env]
+IMAGE = "ghcr.io/idoudali/rust-repo-template-toolchain"
+
+[tasks.toolchain-check]
+description = "Fail if rust-toolchain.toml and mise.toml pin different Rust versions"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+file=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+mise_rust=$(sed -n 's/^rust = .*version = "\([^"]*\)".*/\1/p' mise.toml)
+if [ "$file" != "$mise_rust" ]; then
+  echo "rust-toolchain.toml pins $file but mise.toml pins $mise_rust" >&2
+  exit 1
+fi
+echo "Rust $file pinned consistently"
+'''
+
+[tasks.lock]
+description = "Refresh mise.lock for every platform after changing [tools]"
+run = "mise lock"
+
+[tasks.toolchain-build]
+description = "Build the toolchain image locally as $IMAGE:local"
+run = "docker build -f docker/toolchain.Dockerfile -t $IMAGE:local ."
+
+[tasks.toolchain-shell]
+description = "Open a shell in the toolchain image with the repo mounted at /src"
+run = "docker run --rm -it -v \"$PWD:/src\" -w /src $IMAGE:local bash"
+
+[tasks.vendor]
+description = "Vendor all crate sources into vendor/ for offline builds"
+run = "cargo vendor --locked vendor"
