@@ -139,6 +139,32 @@ jobs:
           persist-credentials: false
       - run: mise run deny
 
+  rename:
+    name: template rename builds
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v6.1.0
+        with:
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          key: rename
+      - run: mise run rename-check
+
   msrv:
     name: msrv (Rust 1.85)
     needs: toolchain
