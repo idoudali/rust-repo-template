@@ -1,30 +1,28 @@
 name: mise-lock
 on: push
 permissions:
-  contents: read
+  contents: write
 jobs:
   lock:
+    if: "!contains(github.event.head_commit.message, '[locks]')"
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        variant: [pr2, pr6]
     steps:
       - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
       - uses: jdx/mise-action@v3
         with:
           version: 2026.10.4
           install: false
       - env:
           GITHUB_TOKEN: ${{ github.token }}
-          VARIANT: ${{ matrix.variant }}
         run: |
-          mkdir work
-          cp "lock/${VARIANT}.toml" work/mise.toml
-          cd work
-          mise trust
-          mise lock
-          echo "===BEGIN==="
-          cat mise.lock
-          echo "===END==="
+          for variant in pr2 pr6; do
+            rm -rf work && mkdir work
+            cp "lock/${variant}.toml" work/mise.toml
+            (cd work && mise trust && mise lock)
+            cp work/mise.lock "lock/${variant}.lock"
+          done
+          rm -rf work
+          git config user.name ci && git config user.email ci@localhost
+          git add lock
+          git commit -m "chore: generated locks [locks]"
+          git push
