@@ -36,6 +36,9 @@ pub fn greeting(name: &str, shout: bool) -> String {
 pub struct Info {
     /// Crate version.
     pub version: &'static str,
+    /// Rust target triple the binary was built for, such as
+    /// `x86_64-unknown-linux-musl`.
+    pub target: &'static str,
     /// Operating system, as in [`std::env::consts::OS`].
     pub os: &'static str,
     /// CPU architecture, as in [`std::env::consts::ARCH`].
@@ -50,11 +53,13 @@ impl Info {
     /// ```
     /// let info = rust_repo_template::Info::current();
     /// assert_eq!(info.os, std::env::consts::OS);
+    /// assert!(info.target.starts_with(std::env::consts::ARCH));
     /// ```
     #[must_use]
     pub fn current() -> Self {
         Self {
             version: VERSION,
+            target: env!("BUILD_TARGET"),
             os: std::env::consts::OS,
             arch: std::env::consts::ARCH,
         }
@@ -70,17 +75,25 @@ impl Info {
     /// ```
     /// use rust_repo_template::Info;
     ///
-    /// let info = Info { version: "1.2.3", os: "linux", arch: "x86_64" };
+    /// let info = Info {
+    ///     version: "1.2.3",
+    ///     target: "x86_64-unknown-linux-musl",
+    ///     os: "linux",
+    ///     arch: "x86_64",
+    /// };
     /// assert_eq!(
     ///     info.to_json(),
-    ///     r#"{"version":"1.2.3","os":"linux","arch":"x86_64"}"#,
+    ///     concat!(
+    ///         r#"{"version":"1.2.3","target":"x86_64-unknown-linux-musl","#,
+    ///         r#""os":"linux","arch":"x86_64"}"#,
+    ///     ),
     /// );
     /// ```
     #[must_use]
     pub fn to_json(&self) -> String {
         format!(
-            r#"{{"version":"{}","os":"{}","arch":"{}"}}"#,
-            self.version, self.os, self.arch
+            r#"{{"version":"{}","target":"{}","os":"{}","arch":"{}"}}"#,
+            self.version, self.target, self.os, self.arch
         )
     }
 }
@@ -88,6 +101,7 @@ impl Info {
 impl fmt::Display for Info {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "version: {}", self.version)?;
+        writeln!(f, "target:  {}", self.target)?;
         writeln!(f, "os:      {}", self.os)?;
         write!(f, "arch:    {}", self.arch)
     }
@@ -119,6 +133,8 @@ mod tests {
     fn info_current_uses_build_platform() {
         let info = Info::current();
         assert_eq!(info.version, VERSION);
+        assert_eq!(info.target, env!("BUILD_TARGET"));
+        assert!(info.target.starts_with(std::env::consts::ARCH));
         assert_eq!(info.os, std::env::consts::OS);
         assert_eq!(info.arch, std::env::consts::ARCH);
     }
@@ -127,16 +143,21 @@ mod tests {
     fn info_renders_text_and_json() {
         let info = Info {
             version: "1.2.3",
+            target: "aarch64-unknown-linux-musl",
             os: "linux",
             arch: "aarch64",
         };
         assert_eq!(
             info.to_string(),
-            "version: 1.2.3\nos:      linux\narch:    aarch64"
+            "version: 1.2.3\ntarget:  aarch64-unknown-linux-musl\n\
+             os:      linux\narch:    aarch64"
         );
         assert_eq!(
             info.to_json(),
-            r#"{"version":"1.2.3","os":"linux","arch":"aarch64"}"#
+            concat!(
+                r#"{"version":"1.2.3","target":"aarch64-unknown-linux-musl","#,
+                r#""os":"linux","arch":"aarch64"}"#,
+            )
         );
     }
 }
