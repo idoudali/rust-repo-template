@@ -1,0 +1,4 @@
+[global]
+# Long lines are fine in prose; tables and links make them unavoidable.
+disable = ["MD013"]
+exclude = ["target", "vendor", "CHANGELOG.md"]

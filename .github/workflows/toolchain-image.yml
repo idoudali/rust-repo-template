@@ -55,6 +55,7 @@ jobs:
       packages: read
     outputs:
       tag: ${{ steps.ref.outputs.tag }}
+      repo: ${{ steps.ref.outputs.repo }}
       image: ${{ steps.ref.outputs.image }}
       exists: ${{ steps.ref.outputs.exists }}
     steps:
@@ -79,6 +80,8 @@ jobs:
           hash=$(cat docker/toolchain.Dockerfile .dockerignore mise.toml mise.lock mise.msrv.toml rust-toolchain.toml tests/CI-infra/toolchain-smoke.sh | sha256sum | cut -c1-16)
           tag="ghcr.io/${OWNER,,}/rust-repo-template-toolchain:${hash}"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          # GHCR names must be lowercase; every job pushes to this one.
+          echo "repo=${tag%:*}" >> "$GITHUB_OUTPUT"
           if digest=$(docker buildx imagetools inspect "${tag}" --format '{{json .Manifest}}' 2> /dev/null | jq -er .digest); then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "image=${tag%:*}@${digest}" >> "$GITHUB_OUTPUT"
@@ -139,7 +142,7 @@ jobs:
           file: docker/toolchain.Dockerfile
           platforms: linux/${{ matrix.arch }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/rust-repo-template-toolchain,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.plan.outputs.repo }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=toolchain-${{ matrix.arch }}
           provenance: mode=max
           sbom: true
