@@ -1,0 +1,84 @@
+# Run with prek (a Rust drop-in for pre-commit): `mise run hooks`.
+# Install the git hooks once per clone: `mise run hooks-install`.
+# Local hooks use the tools pinned in mise.toml, so no hook downloads its own.
+# They are `language: system`: each runs the binary found on PATH, so they work
+# wherever the mise tools are on PATH: inside the toolchain image (dev
+# container, CI), or on the host after `mise install` with mise activated in
+# your shell (`mise activate`) or its shims directory on PATH. Otherwise, for
+# example when a GUI client runs git, they fail with "command not found". prek runs the pre-commit-hooks checks below
+# natively, so no Python is needed.
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+        exclude: ^\.devcontainer/devcontainer\.json$
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: toolchain-check
+        name: rust-toolchain.toml matches mise.toml
+        entry: mise run toolchain-check
+        language: system
+        files: ^(rust-toolchain\.toml|mise\.toml)$
+        pass_filenames: false
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+        language: system
+        types_or: [rust, toml]
+        pass_filenames: false
+      - id: cargo-deny
+        name: cargo deny
+        entry: cargo deny --locked check
+        language: system
+        files: (^|/)(Cargo\.(toml|lock)|deny\.toml)$
+        pass_filenames: false
+      - id: typos
+        name: typos
+        entry: typos --force-exclude
+        language: system
+        types: [text]
+      - id: rumdl
+        name: rumdl
+        entry: rumdl check
+        language: system
+        types: [markdown]
+      - id: actionlint
+        name: actionlint
+        entry: actionlint
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+      - id: zizmor
+        name: zizmor
+        entry: zizmor --offline
+        language: system
+        files: ^\.github/(workflows/.*\.ya?ml|zizmor\.yml)$
+        pass_filenames: false
+        args: [.github/workflows]
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+      - id: cog-verify
+        name: conventional commit message
+        entry: cog verify --file
+        language: system
+        stages: [commit-msg]

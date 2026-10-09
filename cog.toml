@@ -1,0 +1,5 @@
+# cocogitto: conventional commit checks (commit-msg hook and CI).
+# Versioning and the changelog are handled by release-plz.
+tag_prefix = "v"
+ignore_merge_commits = true
+ignore_fixup_commits = true
