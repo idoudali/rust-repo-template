@@ -1,0 +1,30 @@
+{
+  "env": {
+    "CLAUDE_CODE_PREVENT_AUTO_COMMIT": "1"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rust-after-edit.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/rust-after-edit.sh --all-check",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

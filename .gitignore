@@ -28,3 +28,4 @@ rustc-ice-*.txt
 /site/
 lcov.info
 .DS_Store
+.claude/settings.local.json

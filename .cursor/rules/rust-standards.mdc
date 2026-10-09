@@ -1,0 +1,13 @@
+---
+description: Rust coding standard for this repo (rustfmt and clippy enforced)
+globs: ["**/*.rs", "**/Cargo.toml"]
+alwaysApply: false
+---
+
+# Rust coding standard
+
+- Edition 2024; `rustfmt` with `max_width = 80`.
+- Clippy `pedantic` and `cargo` groups at warn; CI denies all warnings.
+- `unsafe_code` is forbidden; `missing_docs` is on, so every public item has a `///` doc comment.
+- Logic lives in `crates/rust-repo-template`; the CLI crate only parses arguments and prints.
+- Run `mise run fmt lint test` after edits and `mise run verify` before finishing.
