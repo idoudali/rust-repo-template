@@ -1,0 +1,7 @@
+# Loaded on top of mise.toml when MISE_ENV=msrv: every task runs on the
+# minimum supported Rust version (rust-version in Cargo.toml).
+[tools]
+rust = { version = "1.85.0", profile = "minimal" }
+
+[env]
+RUSTUP_TOOLCHAIN = "1.85.0"

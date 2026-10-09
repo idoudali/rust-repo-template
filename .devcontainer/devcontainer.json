@@ -1,0 +1,18 @@
+{
+  "name": "rust-repo-template",
+  "image": "ghcr.io/idoudali/rust-repo-template-toolchain:main",
+  "remoteUser": "ubuntu",
+  // The checkout is bind-mounted from the host. On Linux, give the image's
+  // `ubuntu` user (uid 1000) the host user's uid and gid at start, so files
+  // written in the container belong to you on the host. This is the default;
+  // it is set here to make it explicit.
+  "updateRemoteUserUID": true,
+  "mounts": [
+    "source=rust-repo-template-cargo-registry,target=/opt/cargo/registry,type=volume"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer", "tamasfe.even-better-toml"]
+    }
+  }
+}
