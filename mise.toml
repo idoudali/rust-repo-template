@@ -118,3 +118,11 @@ run = [
   "cargo llvm-cov nextest --workspace --all-features --locked --fail-under-lines 100 --lcov --output-path lcov.info",
   "cargo llvm-cov report --html",
 ]
+
+[tasks.hooks-install]
+description = "Install the pre-commit and commit-msg git hooks"
+run = "prek install --install-hooks"
+
+[tasks.hooks]
+description = "Run the pre-commit hooks on all files (not the commit-msg hook)"
+run = "prek run --all-files"
