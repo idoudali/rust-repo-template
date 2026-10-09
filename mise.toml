@@ -76,3 +76,31 @@ run = "docker run --rm -it -v \"$PWD:/src\" -w /src $IMAGE:local bash"
 [tasks.vendor]
 description = "Vendor all crate sources into vendor/ for offline builds"
 run = "cargo vendor --locked vendor"
+
+[tasks.fmt]
+description = "Format all Rust code"
+run = "cargo fmt --all"
+
+[tasks.fmt-check]
+description = "Check formatting without changing files"
+run = "cargo fmt --all --check"
+
+[tasks.lint]
+description = "Clippy (pedantic and cargo groups) with warnings as errors"
+run = "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings"
+
+[tasks.deny]
+description = "Check advisories, licenses, bans and sources"
+run = "cargo deny --locked check"
+
+[tasks.typos]
+description = "Spell-check the repo"
+run = "typos"
+
+[tasks.mdlint]
+description = "Lint Markdown files"
+run = "rumdl check ."
+
+[tasks.verify]
+description = "Run every check CI runs"
+depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint"]
