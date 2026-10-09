@@ -1,0 +1,13 @@
+[package]
+name = "rust-repo-template"
+description = "Core library of the Rust repository template."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[lib]
+name = "rust_repo_template"

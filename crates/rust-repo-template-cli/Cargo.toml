@@ -1,0 +1,18 @@
+[package]
+name = "rust-repo-template-cli"
+description = "Command-line interface of the Rust repository template."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "rust-repo-template"
+path = "src/main.rs"
+
+[dependencies]
+rust-repo-template.workspace = true
+clap.workspace = true
