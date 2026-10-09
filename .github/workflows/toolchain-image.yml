@@ -1,0 +1,213 @@
+name: toolchain-image
+
+# Builds the toolchain image from docker/toolchain.Dockerfile and the mise
+# manifests, tags it by a hash of those inputs, and pushes it to GHCR. An
+# existing tag is reused, so most runs only resolve the image reference.
+# CI calls this workflow first and runs its Linux jobs inside the image,
+# referenced by digest.
+#
+# Pull requests from this repository push the hash tag, because CI on the PR
+# runs inside it. Pull requests from forks cannot write packages: they build
+# and smoke-test the image without pushing, so a fork PR that changes the
+# image inputs needs a maintainer to push the branch here for CI to pass.
+
+on:
+  workflow_call:
+    outputs:
+      image:
+        description: Image reference pinned by digest (name@sha256:...)
+        value: ${{ jobs.merge.outputs.image || jobs.plan.outputs.image }}
+      tag:
+        description: Human-readable image tag (name:hash) for the logs
+        value: ${{ jobs.plan.outputs.tag }}
+  push:
+    branches: [main]
+    paths:
+      - docker/**
+      - mise.toml
+      - mise.lock
+      - mise.msrv.toml
+      - rust-toolchain.toml
+      - .dockerignore
+      - tests/CI-infra/**
+      - .github/workflows/toolchain-image.yml
+  pull_request:
+    paths:
+      - docker/**
+      - mise.toml
+      - mise.lock
+      - mise.msrv.toml
+      - rust-toolchain.toml
+      - .dockerignore
+      - tests/CI-infra/**
+      - .github/workflows/toolchain-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: resolve image tag
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      tag: ${{ steps.ref.outputs.tag }}
+      image: ${{ steps.ref.outputs.image }}
+      exists: ${{ steps.ref.outputs.exists }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # The tag is the first 16 hex digits of a SHA-256 over every file that
+      # goes into the image (and its smoke test), so any change to the
+      # Dockerfile, the build context filter, a tool version or the test
+      # gives a new tag. If that tag is already in GHCR, record its
+      # digest and skip the build; otherwise the build job below makes it.
+      - name: Compute the image tag and check whether it exists
+        id: ref
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          hash=$(cat docker/toolchain.Dockerfile .dockerignore mise.toml mise.lock mise.msrv.toml rust-toolchain.toml tests/CI-infra/toolchain-smoke.sh | sha256sum | cut -c1-16)
+          tag="ghcr.io/${OWNER,,}/rust-repo-template-toolchain:${hash}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          if digest=$(docker buildx imagetools inspect "${tag}" --format '{{json .Manifest}}' 2> /dev/null | jq -er .digest); then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "image=${tag%:*}@${digest}" >> "$GITHUB_OUTPUT"
+            echo "Reusing ${tag} (${digest})"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Building ${tag}"
+          fi
+
+  build:
+    name: build (${{ matrix.arch }})
+    needs: plan
+    if: needs.plan.outputs.exists != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CAN_PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build for smoke test
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: docker/toolchain.Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: toolchain:smoke
+          cache-from: type=gha,scope=toolchain-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=toolchain-${{ matrix.arch }}
+      - name: Smoke test
+        run: >-
+          docker run --rm -v "${PWD}/tests/CI-infra:/ci:ro" toolchain:smoke
+          bash /ci/toolchain-smoke.sh
+      - name: Push by digest
+        id: push
+        if: env.CAN_PUSH == 'true'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: docker/toolchain.Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/rust-repo-template-toolchain,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=toolchain-${{ matrix.arch }}
+          provenance: mode=max
+          sbom: true
+      - name: Save digest
+        if: env.CAN_PUSH == 'true'
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: env.CAN_PUSH == 'true'
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  merge:
+    name: publish multi-arch tag
+    needs: [plan, build]
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.manifest.outputs.image }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: digest-*
+          path: /tmp/digests
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create manifest list
+        id: manifest
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+        working-directory: /tmp/digests
+        run: |
+          repo="${TAG%:*}"
+          # shellcheck disable=SC2046
+          docker buildx imagetools create -t "${TAG}" $(printf "${repo}@sha256:%s " *)
+          docker buildx imagetools inspect "${TAG}"
+          digest=$(docker buildx imagetools inspect "${TAG}" --format '{{json .Manifest}}' | jq -er .digest)
+          echo "image=${repo}@${digest}" >> "$GITHUB_OUTPUT"
+
+  tag-main:
+    name: tag main
+    needs: [plan, merge]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.merge.result == 'success' || needs.plan.outputs.exists == 'true')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Point :main at this image
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: docker buildx imagetools create -t "${TAG%:*}:main" "${TAG}"

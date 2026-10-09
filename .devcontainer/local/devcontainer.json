@@ -1,0 +1,17 @@
+{
+  "name": "rust-repo-template (local build)",
+  "build": {
+    "dockerfile": "../../docker/toolchain.Dockerfile",
+    "context": "../..",
+    "cacheFrom": "ghcr.io/idoudali/rust-repo-template-toolchain:main"
+  },
+  "remoteUser": "ubuntu",
+  "mounts": [
+    "source=rust-repo-template-cargo-registry,target=/opt/cargo/registry,type=volume"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer", "tamasfe.even-better-toml"]
+    }
+  }
+}
