@@ -1,0 +1,79 @@
+name: release-plz
+
+# On every push to main: open or update the Release PR (`release-pr`), and
+# when that PR has merged, push the `v<version>` tag (`release`). The tag
+# starts dist's release.yml, which builds the binaries and the GitHub Release.
+#
+# A tag or PR created with GITHUB_TOKEN starts no other workflow, so the tag
+# would not reach release.yml and CI would not run on the Release PR. Install
+# a GitHub App with contents and pull-requests write access and set the
+# RELEASE_APP_ID variable and RELEASE_APP_PRIVATE_KEY secret. Without them the
+# jobs fall back to GITHUB_TOKEN and the release has to be finished by hand.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-plz
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: tag released version
+    if: github.repository_owner == 'idoudali'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - id: app-token
+        if: vars.RELEASE_APP_ID != ''
+        uses: actions/create-github-app-token@v2.2.2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+      - uses: actions/checkout@v6.1.0
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          persist-credentials: true # zizmor: ignore[artipacked] release-plz pushes tags
+      - uses: release-plz/action@v0.5.140
+        with:
+          command: release
+          # Same release-plz as mise.toml; bump both together.
+          version: 0.3.170
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+
+  release-pr:
+    name: open or update the Release PR
+    if: github.repository_owner == 'idoudali'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: app-token
+        if: vars.RELEASE_APP_ID != ''
+        uses: actions/create-github-app-token@v2.2.2
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      - uses: actions/checkout@v6.1.0
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          persist-credentials: true # zizmor: ignore[artipacked] release-plz pushes the PR branch
+      - uses: release-plz/action@v0.5.140
+        with:
+          command: release-pr
+          # Same release-plz as mise.toml; bump both together.
+          version: 0.3.170
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
