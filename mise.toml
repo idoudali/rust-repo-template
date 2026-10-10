@@ -59,6 +59,10 @@ echo "Rust $file pinned consistently"
 description = "Refresh mise.lock for every platform after changing [tools]"
 run = "mise lock"
 
+[tasks.rename-check]
+description = "Rename a copy of the repo with `cargo xtask rename` and build it (slow)"
+run = "cargo test --locked -p xtask --test rename_builds -- --ignored"
+
 [tasks.toolchain-build]
 description = "Build the toolchain image locally as $IMAGE:local"
 run = "docker build -f docker/toolchain.Dockerfile -t $IMAGE:local ."
@@ -117,7 +121,7 @@ run = [
 [tasks.coverage]
 description = "Line coverage with a 100% gate; writes lcov.info and target/llvm-cov/html"
 run = [
-  "cargo llvm-cov nextest --workspace --all-features --locked --fail-under-lines 100 --lcov --output-path lcov.info",
+  "cargo llvm-cov nextest --workspace --exclude xtask --all-features --locked --fail-under-lines 100 --lcov --output-path lcov.info",
   "cargo llvm-cov report --html",
 ]
 
