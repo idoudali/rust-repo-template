@@ -1,4 +1,8 @@
-//! Core library of the Rust repository template.
+// README.md here is a symlink to the workspace README, so the same path
+// works in the workspace and in the packaged crate.
+#![doc = include_str!("../README.md")]
+
+pub mod guide;
 
 /// Version of this crate, taken from `Cargo.toml` at build time.
 ///
