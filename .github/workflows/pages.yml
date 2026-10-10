@@ -34,11 +34,11 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
       options: --user root
     steps:
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - run: mise run docs
-      - uses: actions/upload-pages-artifact@v3.0.1
+      - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: target/doc
 
@@ -53,4 +53,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4.0.5
+        uses: actions/deploy-pages@v5.0.1
