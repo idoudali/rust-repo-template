@@ -33,6 +33,10 @@ Every tool version lives in [`mise.toml`](./mise.toml). Pick one of:
 | `docker/`                       | Toolchain image                                |
 | `tests/CI-infra/`               | Tests for the CI setup (image smoke test)      |
 
+## Coding agents
+
+[`AGENTS.md`](./AGENTS.md) holds the instructions every agent follows. Claude Code, Cursor, and Copilot each get a thin pointer to it, plus Claude hooks that run rustfmt and clippy after edits.
+
 ## License
 
 Apache-2.0. See [`LICENSE`](./LICENSE).
