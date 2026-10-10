@@ -1,0 +1,8 @@
+# Steps dist inserts into each release build job (github-build-setup in
+# dist-workspace.toml), so the builds use the Rust pinned in mise.toml.
+# Run `dist generate` after editing this file.
+- name: Install Rust from mise.toml
+  uses: jdx/mise-action@v3.6.3
+  with:
+    version: 2026.10.4
+    install_args: rust

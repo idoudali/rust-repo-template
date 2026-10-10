@@ -154,3 +154,15 @@ root="target/install-smoke"
 cargo install --locked --path crates/rust-repo-template-cli --root "$root" --force
 "$root/bin/rust-repo-template" --version
 '''
+
+[tasks.dist-plan]
+description = "Show which release artifacts dist would build"
+run = "dist plan"
+
+[tasks.dist-generate]
+description = "Regenerate .github/workflows/release.yml after changing dist-workspace.toml"
+run = "dist generate"
+
+[tasks.dist-check]
+description = "Fail if release.yml is out of date with dist-workspace.toml"
+run = "dist generate --check"
