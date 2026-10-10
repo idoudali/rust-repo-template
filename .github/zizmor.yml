@@ -1,0 +1,11 @@
+rules:
+  # Actions are referenced by exact version tag (vX.Y.Z), not commit SHA, so
+  # people can read them; Dependabot bumps them. See AGENTS.md.
+  unpinned-uses:
+    config:
+      policies:
+        "*": ref-pin
+  # `uses: ./...` for local reusable workflows is fine; the `$/` form is newer
+  # than some tooling (actionlint) understands.
+  self-repository:
+    disable: true

@@ -1,0 +1,61 @@
+name: toolchain-bump
+
+# Once a month, open a PR that moves rust-toolchain.toml, mise.toml and
+# mise.lock to the latest stable Rust. Dependabot does not track the toolchain.
+# Needs the repo setting "Allow GitHub Actions to create and approve pull
+# requests". A PR opened with GITHUB_TOKEN does not start CI by itself: close
+# and reopen it, or push to its branch, to run the checks.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bump:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: true
+      - uses: jdx/mise-action@v3.6.3
+        with:
+          version: 2026.10.4
+          install: false
+      - name: Find latest stable
+        id: stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          version=$(rustc +stable --version | cut -d' ' -f2)
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Update pins and open a PR
+        env:
+          VERSION: ${{ steps.stable.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          if [ "${current}" = "${VERSION}" ]; then
+            echo "Already on ${VERSION}"
+            exit 0
+          fi
+          branch="build/rust-${VERSION}"
+          if git ls-remote --exit-code --heads origin "${branch}" > /dev/null; then
+            echo "${branch} already exists"
+            exit 0
+          fi
+          sed -i "s/^channel = \".*\"/channel = \"${VERSION}\"/" rust-toolchain.toml
+          sed -i "0,/{ version = \"${current}\"/s//{ version = \"${VERSION}\"/" mise.toml
+          mise lock rust
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "${branch}"
+          git commit -am "build: bump Rust toolchain to ${VERSION}"
+          git push origin "${branch}"
+          gh pr create --title "build: bump Rust toolchain to ${VERSION}" \
+            --body "Moves rust-toolchain.toml, mise.toml and mise.lock from ${current} to ${VERSION}. The toolchain image rebuilds in CI."

@@ -1,0 +1,240 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  toolchain:
+    name: toolchain image
+    uses: ./.github/workflows/toolchain-image.yml
+    permissions:
+      contents: read
+      packages: write
+
+  hooks:
+    name: hooks (prek)
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@v2.9.2
+      - run: mise ls --current && gcc --version | head -n 1
+      - run: mise run hooks
+
+  test:
+    name: test and coverage (linux)
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@v2.9.2
+      - run: mise run test
+      - run: mise run coverage
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: coverage
+          path: |
+            lcov.info
+            target/llvm-cov/html
+          retention-days: 14
+
+  deny:
+    name: cargo deny
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - run: mise run deny
+
+  msrv:
+    name: msrv (Rust 1.85)
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    env:
+      MISE_ENV: msrv
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          key: msrv
+      - run: rustc --version
+      - run: mise run check
+
+  # zizmor is a static security checker for GitHub Actions workflows. It flags
+  # template injection from untrusted inputs (PR titles, branch names) into
+  # `run:` scripts, credentials left in checkouts, overly broad `permissions`,
+  # unpinned actions and images, and cache poisoning in release jobs. Settings
+  # and accepted exceptions are in .github/zizmor.yml.
+  zizmor:
+    name: zizmor (workflow audit)
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - name: Audit workflows (online audits use the token read-only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor .github/workflows
+
+  commits:
+    name: conventional commits
+    if: github.event_name == 'pull_request'
+    needs: toolchain
+    runs-on: ubuntu-26.04
+    container:
+      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
+      # the expression, so it is told the reference is pinned.
+      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - name: Show toolchain image
+        env:
+          IMAGE: ${{ needs.toolchain.outputs.image }}
+          TAG: ${{ needs.toolchain.outputs.tag }}
+        run: echo "${TAG} = ${IMAGE}"
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check every commit in the PR
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        # `cog check A..B` also checks A itself, so verify each PR commit.
+        # Inside a repository cog reads the git identity and aborts when it is unset.
+        run: |
+          git config user.name ci && git config user.email ci@localhost
+          for commit in $(git rev-list --no-merges "${BASE_SHA}..HEAD"); do
+            git log -1 --format='%h %s' "$commit"
+            cog verify "$(git log -1 --format=%B "$commit")" > /dev/null
+          done
+
+  test-native:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    env:
+      # Bump together with the macos-15 runner label; see the runner image's
+      # list of installed Xcode versions.
+      XCODE_VERSION: "16.4"
+    steps:
+      - uses: actions/checkout@v5.1.0
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v3.6.3
+        with:
+          version: 2026.10.4
+          # Only what the tests need; the full manifest is for the image.
+          install_args: rust cargo-binstall cargo:cargo-nextest
+      - uses: Swatinem/rust-cache@v2.9.2
+      # The system C compiler comes from the runner image, so pin what can be
+      # pinned and print the rest: a runner image change shows up here.
+      - name: Select Xcode
+        if: runner.os == 'macOS'
+        run: sudo xcode-select --switch "/Applications/Xcode_${XCODE_VERSION}.app"
+      - name: Show toolchain
+        shell: bash
+        run: |
+          mise ls --current
+          rustc --version
+          if [ "$RUNNER_OS" = macOS ]; then
+            xcodebuild -version
+            cc --version | head -n 1
+          else
+            vs=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)
+            echo "Visual Studio: $("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property catalog_productDisplayVersion)"
+            echo "MSVC tools: $(cat "$(cygpath "$vs")/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt")"
+          fi
+      - run: mise run test

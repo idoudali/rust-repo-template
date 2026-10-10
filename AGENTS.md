@@ -6,6 +6,7 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 
 - Every tool and its version comes from `mise.toml`. Run commands through mise tasks (`mise run <task>`) or inside the toolchain image (`docker/toolchain.Dockerfile`, also the dev container). Never install tools ad hoc with `cargo install`, `apt`, or `brew`.
 - Rust is pinned in `rust-toolchain.toml`. The minimum supported version is `rust-version` in `Cargo.toml`; `MISE_ENV=msrv mise run <task>` runs a task on it.
+- GitHub Actions are referenced by exact version tag (`actions/checkout@v6.1.0`), never by commit SHA or a moving major tag like `@v6`, so a reader can tell the version. Dependabot bumps them; `.github/zizmor.yml` allows tag pins.
 - Add a dependency to `[workspace.dependencies]` in the root `Cargo.toml`, then reference it with `.workspace = true` from the crate. Never edit `Cargo.lock` by hand; commit it.
 
 ## Layout
