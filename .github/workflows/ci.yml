@@ -41,7 +41,7 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: Swatinem/rust-cache@v2.9.2
@@ -66,13 +66,13 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: Swatinem/rust-cache@v2.9.2
       - run: mise run test
       - run: mise run coverage
-      - uses: actions/upload-artifact@v4.6.2
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage
           path: |
@@ -98,7 +98,7 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - run: mise run deny
@@ -123,7 +123,7 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: Swatinem/rust-cache@v2.9.2
@@ -155,7 +155,7 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Audit workflows (online audits use the token read-only)
@@ -182,7 +182,7 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -210,10 +210,10 @@ jobs:
       # list of installed Xcode versions.
       XCODE_VERSION: "16.4"
     steps:
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v3.6.3
+      - uses: jdx/mise-action@v5.1.1
         with:
           version: 2026.10.4
           # Only what the tests need; the full manifest is for the image.
