@@ -140,3 +140,17 @@ run = [
   "cargo doc --workspace --no-deps --all-features --locked",
   "echo '<meta http-equiv=\"refresh\" content=\"0; url=rust_repo_template/index.html\">' > target/doc/index.html",
 ]
+
+[tasks.package]
+description = "Check the library packages cleanly and the CLI installs and runs"
+# `cargo package` checks the library tarball builds on its own. The CLI crate
+# depends on the unpublished library by path, which `cargo package` cannot
+# resolve while `publish = false`, so it is checked with `cargo install`.
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+cargo package --locked -p rust-repo-template
+root="target/install-smoke"
+cargo install --locked --path crates/rust-repo-template-cli --root "$root" --force
+"$root/bin/rust-repo-template" --version
+'''
