@@ -3,8 +3,9 @@ name: toolchain-image
 # Builds the toolchain image from docker/toolchain.Dockerfile and the mise
 # manifests, tags it by a hash of those inputs, and pushes it to GHCR. An
 # existing tag is reused, so most runs only resolve the image reference.
-# CI calls this workflow first and runs its Linux jobs inside the image,
-# referenced by digest.
+# ci.yml calls this workflow first (on PRs and pushes to main) and runs its
+# Linux jobs inside the resulting image, referenced by digest; it can also be
+# run by hand.
 #
 # Pull requests from this repository push the hash tag, because CI on the PR
 # runs inside it. Pull requests from forks cannot write packages: they build
@@ -20,27 +21,6 @@ on:
       tag:
         description: Human-readable image tag (name:hash) for the logs
         value: ${{ jobs.plan.outputs.tag }}
-  push:
-    branches: [main]
-    paths:
-      - docker/**
-      - mise.toml
-      - mise.lock
-      - mise.msrv.toml
-      - rust-toolchain.toml
-      - .dockerignore
-      - tests/CI-infra/**
-      - .github/workflows/toolchain-image.yml
-  pull_request:
-    paths:
-      - docker/**
-      - mise.toml
-      - mise.lock
-      - mise.msrv.toml
-      - rust-toolchain.toml
-      - .dockerignore
-      - tests/CI-infra/**
-      - .github/workflows/toolchain-image.yml
   workflow_dispatch:
 
 permissions:
@@ -49,7 +29,7 @@ permissions:
 jobs:
   plan:
     name: resolve image tag
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: read
@@ -59,10 +39,10 @@ jobs:
       image: ${{ steps.ref.outputs.image }}
       exists: ${{ steps.ref.outputs.exists }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@v5.1.0
         with:
           persist-credentials: false
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      - uses: docker/login-action@v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -100,9 +80,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -110,17 +90,17 @@ jobs:
     env:
       CAN_PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@v5.1.0
         with:
           persist-credentials: false
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      - uses: docker/setup-buildx-action@v3.12.0
+      - uses: docker/login-action@v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build for smoke test
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@v6.19.2
         with:
           context: .
           file: docker/toolchain.Dockerfile
@@ -136,7 +116,7 @@ jobs:
       - name: Push by digest
         id: push
         if: env.CAN_PUSH == 'true'
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@v6.19.2
         with:
           context: .
           file: docker/toolchain.Dockerfile
@@ -153,7 +133,7 @@ jobs:
         run: |
           mkdir -p /tmp/digests
           touch "/tmp/digests/${DIGEST#sha256:}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@v4.6.2
         if: env.CAN_PUSH == 'true'
         with:
           name: digest-${{ matrix.arch }}
@@ -164,20 +144,20 @@ jobs:
     name: publish multi-arch tag
     needs: [plan, build]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: write
     outputs:
       image: ${{ steps.manifest.outputs.image }}
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@v4.3.0
         with:
           pattern: digest-*
           path: /tmp/digests
           merge-multiple: true
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      - uses: docker/setup-buildx-action@v3.12.0
+      - uses: docker/login-action@v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -199,13 +179,13 @@ jobs:
     name: tag main
     needs: [plan, merge]
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.merge.result == 'success' || needs.plan.outputs.exists == 'true')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+      - uses: docker/setup-buildx-action@v3.12.0
+      - uses: docker/login-action@v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
