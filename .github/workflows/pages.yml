@@ -34,7 +34,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
       options: --user root
     steps:
-      - uses: actions/checkout@v5.1.0
+      - uses: actions/checkout@v6.1.0
         with:
           persist-credentials: false
       - run: mise run docs
