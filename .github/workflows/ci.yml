@@ -1,9 +1,16 @@
 name: ci
 
+# The checks for pull requests and pushes to main, all on Linux inside the
+# toolchain image. macOS and Windows are only tested before a release:
+# release-checks.yml calls this workflow and adds them. Draft pull requests
+# are skipped; the checks start when the PR is marked ready for review.
+
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,13 +25,17 @@ env:
 jobs:
   toolchain:
     name: toolchain image
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     uses: ./.github/workflows/toolchain-image.yml
     permissions:
       contents: read
       packages: write
 
-  hooks:
-    name: hooks (prek)
+  # One job, so the toolchain image is pulled once: pulling it takes far
+  # longer than most of the checks. Every check runs even when an earlier one
+  # fails, so a run reports all failures at once.
+  checks:
+    name: checks (linux)
     needs: toolchain
     runs-on: ubuntu-26.04
     container:
@@ -44,185 +55,54 @@ jobs:
       - uses: actions/checkout@v6.1.0
         with:
           persist-credentials: false
+          # The conventional commits check walks the PR's history.
+          fetch-depth: 0
       - uses: Swatinem/rust-cache@v2.9.2
       - run: mise ls --current && gcc --version | head -n 1
-      - run: mise run hooks
-
-  test:
-    name: test and coverage (linux)
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
-      # the expression, so it is told the reference is pinned.
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    steps:
-      - name: Show toolchain image
+      # fmt, clippy, cargo deny, typos, rumdl, actionlint, shellcheck and
+      # an offline zizmor; see .pre-commit-config.yaml.
+      - name: Hooks (prek)
+        if: ${{ !cancelled() }}
+        run: mise run hooks
+      # zizmor is a static security checker for GitHub Actions workflows. It
+      # flags template injection from untrusted inputs (PR titles, branch
+      # names) into `run:` scripts, credentials left in checkouts, overly
+      # broad `permissions`, unpinned actions and images, and cache poisoning
+      # in release jobs. The hook runs it offline; this adds the online
+      # audits. Settings and accepted exceptions are in .github/zizmor.yml.
+      - name: zizmor (online audits use the token read-only)
+        if: ${{ !cancelled() }}
         env:
-          IMAGE: ${{ needs.toolchain.outputs.image }}
-          TAG: ${{ needs.toolchain.outputs.tag }}
-        run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - uses: Swatinem/rust-cache@v2.9.2
-      - run: mise run test
-      - run: mise run coverage
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor .github/workflows
+      - name: Test
+        if: ${{ !cancelled() }}
+        run: mise run test
+      - name: Coverage
+        id: coverage
+        if: ${{ !cancelled() }}
+        run: mise run coverage
       - uses: actions/upload-artifact@v7.0.2
+        if: ${{ !cancelled() && steps.coverage.outcome == 'success' }}
         with:
           name: coverage
           path: |
             lcov.info
             target/llvm-cov/html
           retention-days: 14
-
-  docs:
-    name: rustdoc
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # The tag is a content hash of the image inputs (toolchain-image.yml).
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    steps:
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - uses: Swatinem/rust-cache@v2.9.2
-      - run: mise run docs
-
-  package:
-    name: package and install
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # The tag is a content hash of the image inputs (toolchain-image.yml).
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    steps:
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - uses: Swatinem/rust-cache@v2.9.2
-      - run: mise run package
-
-  deny:
-    name: cargo deny
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
-      # the expression, so it is told the reference is pinned.
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    steps:
-      - name: Show toolchain image
+      - name: Rustdoc
+        if: ${{ !cancelled() }}
+        run: mise run docs
+      - name: Package and install
+        if: ${{ !cancelled() }}
+        run: mise run package
+      - name: MSRV (Rust 1.85)
+        if: ${{ !cancelled() }}
         env:
-          IMAGE: ${{ needs.toolchain.outputs.image }}
-          TAG: ${{ needs.toolchain.outputs.tag }}
-        run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - run: mise run deny
-
-  msrv:
-    name: msrv (Rust 1.85)
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
-      # the expression, so it is told the reference is pinned.
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    env:
-      MISE_ENV: msrv
-    steps:
-      - name: Show toolchain image
-        env:
-          IMAGE: ${{ needs.toolchain.outputs.image }}
-          TAG: ${{ needs.toolchain.outputs.tag }}
-        run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - uses: Swatinem/rust-cache@v2.9.2
-        with:
-          key: msrv
-      - run: rustc --version
-      - run: mise run check
-
-  # zizmor is a static security checker for GitHub Actions workflows. It flags
-  # template injection from untrusted inputs (PR titles, branch names) into
-  # `run:` scripts, credentials left in checkouts, overly broad `permissions`,
-  # unpinned actions and images, and cache poisoning in release jobs. Settings
-  # and accepted exceptions are in .github/zizmor.yml.
-  zizmor:
-    name: zizmor (workflow audit)
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
-      # the expression, so it is told the reference is pinned.
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    steps:
-      - name: Show toolchain image
-        env:
-          IMAGE: ${{ needs.toolchain.outputs.image }}
-          TAG: ${{ needs.toolchain.outputs.tag }}
-        run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - name: Audit workflows (online audits use the token read-only)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: zizmor .github/workflows
-
-  commits:
-    name: conventional commits
-    if: github.event_name == 'pull_request'
-    needs: toolchain
-    runs-on: ubuntu-26.04
-    container:
-      # name@sha256:... from toolchain-image.yml. zizmor cannot see through
-      # the expression, so it is told the reference is pinned.
-      image: ${{ needs.toolchain.outputs.image }} # zizmor: ignore[unpinned-images]
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user root
-    steps:
-      - name: Show toolchain image
-        env:
-          IMAGE: ${{ needs.toolchain.outputs.image }}
-          TAG: ${{ needs.toolchain.outputs.tag }}
-        run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - name: Check every commit in the PR
+          MISE_ENV: msrv
+        run: rustc --version && mise run check
+      - name: Conventional commits
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         # `cog check A..B` also checks A itself, so verify each PR commit.
@@ -233,44 +113,3 @@ jobs:
             git log -1 --format='%h %s' "$commit"
             cog verify "$(git log -1 --format=%B "$commit")" > /dev/null
           done
-
-  test-native:
-    name: test (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-15, windows-2025]
-    runs-on: ${{ matrix.os }}
-    env:
-      # Bump together with the macos-15 runner label; see the runner image's
-      # list of installed Xcode versions.
-      XCODE_VERSION: "16.4"
-    steps:
-      - uses: actions/checkout@v6.1.0
-        with:
-          persist-credentials: false
-      - uses: jdx/mise-action@v3.6.3
-        with:
-          version: 2026.10.4
-          # Only what the tests need; the full manifest is for the image.
-          install_args: rust cargo-binstall cargo:cargo-nextest
-      - uses: Swatinem/rust-cache@v2.9.2
-      # The system C compiler comes from the runner image, so pin what can be
-      # pinned and print the rest: a runner image change shows up here.
-      - name: Select Xcode
-        if: runner.os == 'macOS'
-        run: sudo xcode-select --switch "/Applications/Xcode_${XCODE_VERSION}.app"
-      - name: Show toolchain
-        shell: bash
-        run: |
-          mise ls --current
-          rustc --version
-          if [ "$RUNNER_OS" = macOS ]; then
-            xcodebuild -version
-            cc --version | head -n 1
-          else
-            vs=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)
-            echo "Visual Studio: $("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property catalog_productDisplayVersion)"
-            echo "MSVC tools: $(cat "$(cygpath "$vs")/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt")"
-          fi
-      - run: mise run test

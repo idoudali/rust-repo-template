@@ -3,7 +3,8 @@ name: toolchain-image
 # Builds the toolchain image from docker/toolchain.Dockerfile and the mise
 # manifests, tags it by a hash of those inputs, and pushes it to GHCR. An
 # existing tag is reused, so most runs only resolve the image reference.
-# ci.yml calls this workflow first (on PRs and pushes to main) and runs its
+# ci.yml calls this workflow first (on PRs, pushes to main and, through
+# release-checks.yml, release tags) and runs its
 # Linux jobs inside the resulting image, referenced by digest; it can also be
 # run by hand.
 #

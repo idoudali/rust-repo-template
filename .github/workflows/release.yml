@@ -39,7 +39,6 @@ permissions:
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
-  pull_request:
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
@@ -136,10 +135,6 @@ jobs:
         with:
           "install_args": "rust"
           "version": "2026.10.4"
-      - uses: swatinem/rust-cache@v2.9.2
-        with:
-          key: ${{ join(matrix.targets, '-') }}
-          cache-provider: ${{ matrix.cache_provider }}
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
@@ -258,6 +253,18 @@ jobs:
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+
+  custom-release-checks:
+    needs:
+      - plan
+      - build-local-artifacts
+    uses: ./.github/workflows/release-checks.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+    secrets: inherit
+    permissions:
+      "contents": "read"
+      "packages": "write"
   # Determines if we should publish/announce
   host:
     needs:
@@ -265,8 +272,9 @@ jobs:
       - build-local-artifacts
       - build-global-artifacts
       - custom-dist-smoke
+      - custom-release-checks
     # Only run if we're "publishing", and only if plan, local and global didn't fail (skipped is fine)
-    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.custom-dist-smoke.result == 'skipped' || needs.custom-dist-smoke.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
+    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.publishing == 'true' && (needs.build-global-artifacts.result == 'skipped' || needs.build-global-artifacts.result == 'success') && (needs.custom-dist-smoke.result == 'skipped' || needs.custom-dist-smoke.result == 'success') && (needs.custom-release-checks.result == 'skipped' || needs.custom-release-checks.result == 'success') && (needs.build-local-artifacts.result == 'skipped' || needs.build-local-artifacts.result == 'success') }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: "ubuntu-26.04"

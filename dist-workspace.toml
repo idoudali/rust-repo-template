@@ -25,15 +25,18 @@ targets = [
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
-# Build and upload artifacts on every PR
-pr-run-mode = "upload"
+# Run release.yml only for release tags, never on pull requests
+pr-run-mode = "skip"
 # Publish GitHub attestations for the release artifacts
 github-attestations = true
 # Embed the dependency list in the binary and ship a CycloneDX SBOM
 cargo-auditable = true
 cargo-cyclonedx = true
-# Run each built binary on its own platform before anything is published
-global-artifacts-jobs = ["./dist-smoke"]
+# Run each built binary on its own platform, and every check on every
+# platform, before anything is published. These are global-artifacts jobs
+# because `host` refuses to publish when one of them fails; a failed plan job
+# would only skip the builds, and `host` treats skipped builds as fine.
+global-artifacts-jobs = ["./dist-smoke", "./release-checks"]
 # Install Rust from mise.toml in every build job
 github-build-setup = "../dist-build-setup.yml"
 
@@ -54,3 +57,7 @@ global = "ubuntu-26.04"
 "actions/download-artifact" = "v8.0.2"
 "swatinem/rust-cache" = "v2.9.2"
 "actions/attest" = "v4.2.2"
+
+# release-checks calls ci.yml, which may push the toolchain image to GHCR.
+[dist.github-custom-job-permissions]
+"release-checks" = { contents = "read", packages = "write" }

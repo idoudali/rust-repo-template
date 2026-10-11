@@ -1,9 +1,9 @@
 name: dist-smoke
 
 # Called by release.yml (a dist custom job, see dist-workspace.toml) once the
-# per-platform builds finish, on pull requests and on releases alike. The
-# Linux x86 release archive is unpacked and its binary run, so a binary that
-# cannot start blocks the release. Other targets are built but not run; add
+# per-platform builds finish, on every release tag. The Linux x86 release
+# archive is unpacked and its binary run, so a binary that cannot start blocks
+# the release. Other targets are built but not run; add
 # them to TARGETS (and a runner matrix) to test them.
 
 on:
