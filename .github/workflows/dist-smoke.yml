@@ -53,5 +53,7 @@ jobs:
             bin=$(find "${out}" -type f \( -name rust-repo-template -o -name rust-repo-template.exe \) | head -n 1)
             "${bin}" --version
             "${bin}" --help
+            "${bin}" greet Ada --count 2
+            "${bin}" info
             echo "::endgroup::"
           done
