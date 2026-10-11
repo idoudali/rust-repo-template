@@ -8,3 +8,6 @@ pub mod getting_started {}
 
 #[doc = include_str!("../docs/development.md")]
 pub mod development {}
+
+#[doc = include_str!("../docs/releasing.md")]
+pub mod releasing {}

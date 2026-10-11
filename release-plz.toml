@@ -1,0 +1,67 @@
+# release-plz owns versioning: on every push to main it opens or updates a
+# Release PR (version bump, Cargo.lock, CHANGELOG.md). When that PR merges it
+# pushes the `v<version>` tag, and dist's release.yml builds the binaries and
+# creates the GitHub Release. Nothing is published to crates.io.
+
+[workspace]
+# GitHub only: never `cargo publish`.
+publish = false
+# Nothing is on crates.io, so the last release is the newest `v*` tag.
+git_only = true
+# dist creates the GitHub Release from the tag.
+git_release_enable = false
+semver_check = false
+pr_labels = ["release"]
+
+# Both crates share one version: the same version_group on each.
+[[package]]
+name = "rust-repo-template-cli"
+version_group = "workspace"
+# The CLI is the released app: its changelog is the repo changelog and its
+# tag (`v<version>`) is what dist listens for.
+release = true
+changelog_path = "CHANGELOG.md"
+changelog_include = ["rust-repo-template"]
+git_tag_enable = true
+git_tag_name = "v{{ version }}"
+
+[[package]]
+name = "rust-repo-template"
+version_group = "workspace"
+release = true
+changelog_update = false
+git_tag_enable = false
+
+[changelog]
+# One section per conventional commit type that cocogitto accepts (cog.toml).
+# The HTML comments only fix the section order; `body` strips them.
+commit_parsers = [
+  { message = "^feat", group = "<!-- 00 -->Features" },
+  { message = "^fix", group = "<!-- 01 -->Bug fixes" },
+  { message = "^perf", group = "<!-- 02 -->Performance" },
+  { message = "^refactor", group = "<!-- 03 -->Refactoring" },
+  { message = "^docs", group = "<!-- 04 -->Documentation" },
+  { message = "^test", group = "<!-- 05 -->Tests" },
+  { message = "^build", group = "<!-- 06 -->Build" },
+  { message = "^ci", group = "<!-- 07 -->CI" },
+  { message = "^style", group = "<!-- 08 -->Style" },
+  { message = "^revert", group = "<!-- 09 -->Reverts" },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore", group = "<!-- 10 -->Miscellaneous" },
+]
+protect_breaking_commits = true
+# release-plz's default body, with the group name passed through striptags.
+body = """
+## [{{ version }}]{%- if release_link -%}({{ release_link }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+
+{% for commit in commits %}
+{%- if commit.scope -%}
+- *({{commit.scope}})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}) {% endfor -%}){% endif %}
+{% else -%}
+- {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}
+{% endif -%}
+{% endfor -%}
+{% endfor %}
+"""
