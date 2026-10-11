@@ -1,0 +1,72 @@
+name: release-checks
+
+# Called by release.yml (a dist custom job, see dist-workspace.toml) on every
+# release tag, alongside the global build; `host` publishes only if it
+# succeeds. It runs every check: the Linux checks from ci.yml, plus clippy and
+# the tests on each native platform.
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: The dist plan (dist-manifest JSON) from release.yml, unused
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    name: linux
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      packages: write
+
+  native:
+    name: native (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025, ubuntu-26.04-arm]
+    runs-on: ${{ matrix.os }}
+    env:
+      # Bump together with the macos-15 runner label; see the runner image's
+      # list of installed Xcode versions.
+      XCODE_VERSION: "16.4"
+    steps:
+      - uses: actions/checkout@v6.1.0
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v3.6.3
+        with:
+          version: 2026.10.4
+          # Only what the checks need; the full manifest is for the image.
+          install_args: rust cargo-binstall cargo:cargo-nextest
+      - uses: Swatinem/rust-cache@v2.9.2
+      # The system C compiler comes from the runner image, so pin what can be
+      # pinned and print the rest: a runner image change shows up here.
+      - name: Select Xcode
+        if: runner.os == 'macOS'
+        run: sudo xcode-select --switch "/Applications/Xcode_${XCODE_VERSION}.app"
+      - name: Show toolchain
+        shell: bash
+        run: |
+          mise ls --current
+          rustc --version
+          if [ "$RUNNER_OS" = macOS ]; then
+            xcodebuild -version
+            cc --version | head -n 1
+          elif [ "$RUNNER_OS" = Windows ]; then
+            vs=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)
+            echo "Visual Studio: $("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property catalog_productDisplayVersion)"
+            echo "MSVC tools: $(cat "$(cygpath "$vs")/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt")"
+          else
+            cc --version | head -n 1
+          fi
+      - run: mise run lint
+      - run: mise run test
