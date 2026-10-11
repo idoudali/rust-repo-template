@@ -55,18 +55,6 @@ jobs:
         run: sudo xcode-select --switch "/Applications/Xcode_${XCODE_VERSION}.app"
       - name: Show toolchain
         shell: bash
-        run: |
-          mise ls --current
-          rustc --version
-          if [ "$RUNNER_OS" = macOS ]; then
-            xcodebuild -version
-            cc --version | head -n 1
-          elif [ "$RUNNER_OS" = Windows ]; then
-            vs=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)
-            echo "Visual Studio: $("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property catalog_productDisplayVersion)"
-            echo "MSVC tools: $(cat "$(cygpath "$vs")/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt")"
-          else
-            cc --version | head -n 1
-          fi
+        run: bash tools/ci/show-toolchain.sh
       - run: mise run lint
       - run: mise run test

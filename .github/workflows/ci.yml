@@ -105,11 +105,4 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        # `cog check A..B` also checks A itself, so verify each PR commit.
-        # Inside a repository cog reads the git identity and aborts when it is unset.
-        run: |
-          git config user.name ci && git config user.email ci@localhost
-          for commit in $(git rev-list --no-merges "${BASE_SHA}..HEAD"); do
-            git log -1 --format='%h %s' "$commit"
-            cog verify "$(git log -1 --format=%B "$commit")" > /dev/null
-          done
+        run: mise run commits-check "${BASE_SHA}"

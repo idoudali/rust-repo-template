@@ -19,7 +19,9 @@ All commands are mise tasks; `mise tasks` lists them.
 
 ## Toolchain image
 
-`docker/toolchain.Dockerfile` builds an Ubuntu image with every tool from `mise.toml` and the distro's default gcc. CI runs its Linux jobs inside it, and the dev container uses it. `mise run toolchain-build` and `mise run toolchain-shell` build and enter it locally.
+`docker/toolchain.Dockerfile` builds an Ubuntu image with every tool from `mise.toml` and the distro's default gcc. CI runs its Linux jobs inside it, and the dev container uses it. `mise run toolchain-build` and `mise run toolchain-shell` build and enter it locally, and `mise run toolchain-smoke` runs the image's smoke test.
+
+CI tags the image with a hash of its inputs (`mise run toolchain-tag`) and builds it only when that tag is missing from GHCR (`mise run toolchain-resolve`). The workflow's shell steps are scripts in `tools/ci/`, so they run the same way locally.
 
 ## Git hooks and commits
 
