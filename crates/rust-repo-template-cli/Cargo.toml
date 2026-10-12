@@ -18,6 +18,8 @@ workspace = true
 [[bin]]
 name = "rust-repo-template"
 path = "src/main.rs"
+# The bin and the lib share a doc output dir; document only the lib.
+doc = false
 
 [dependencies]
 rust-repo-template.workspace = true

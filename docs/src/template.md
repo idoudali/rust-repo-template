@@ -25,11 +25,11 @@ Then update `authors` in `Cargo.toml`, the README description, and `CHANGELOG.md
 | ----------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Toolchain image visibility: public  | Your profile → Packages → `<name>-toolchain` → Settings | The first CI run publishes it private. Forks, the dev container, and `docker pull` need it public |
 | Actions can create PRs              | Settings → Actions → General → Workflow permissions     | release-plz and the toolchain bump open PRs                                                       |
-| Pages source: GitHub Actions        | Settings → Pages                                        | `pages.yml` deploys the rustdoc site                                                              |
+| Pages source: GitHub Actions        | Settings → Pages                                        | `pages.yml` deploys the docs site (repo book and API reference)                                   |
 | Ruleset on `main`                   | Settings → Rules → Rulesets                             | Require a PR, the status checks below, and no force pushes                                        |
 | Release App (optional, recommended) | Settings → Secrets and variables → Actions              | `RELEASE_APP_ID` variable and `RELEASE_APP_PRIVATE_KEY` secret; see below                         |
 
-Required status check for the ruleset: `checks (linux)`. It is one job that runs every Linux check (hooks, zizmor, tests, coverage, rustdoc, packaging, the rename check, MSRV, and conventional commits). CI skips draft pull requests, so the check starts once a PR is marked ready for review. macOS, Windows, and Linux arm64 are tested only on release tags, by `release-checks.yml`, which blocks the release if they fail.
+Required status check for the ruleset: `checks (linux)`. It is one job that runs every Linux check (hooks, zizmor, tests, coverage, docs, packaging, the rename check, MSRV, and conventional commits). CI skips draft pull requests, so the check starts once a PR is marked ready for review. macOS, Windows, and Linux arm64 are tested only on release tags, by `release-checks.yml`, which blocks the release if they fail.
 
 ## 4. Release token
 

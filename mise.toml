@@ -22,6 +22,8 @@ cargo-binstall = "1.25.2"
 "cargo:typos-cli" = "1.51.1"
 "cargo:rumdl" = "0.2.78"
 "cargo:mdbook" = "0.5.4"
+watchexec = "2.8.0"
+"cargo:miniserve" = "0.35.0"
 "cargo:zizmor" = "1.30.1"
 actionlint = "1.7.12"
 shellcheck = "0.11.0"
@@ -161,16 +163,36 @@ description = "Type-check every target (used by the MSRV job)"
 run = "cargo check --workspace --all-targets --all-features --locked"
 
 [tasks.docs]
-description = "Build the rustdoc site with warnings denied; output in target/doc"
+description = "Build the book and rustdoc into target/site with warnings denied"
 env = { RUSTDOCFLAGS = "-D warnings" }
 run = [
   "cargo doc --workspace --no-deps --all-features --locked",
-  "echo '<meta http-equiv=\"refresh\" content=\"0; url=rust_repo_template/index.html\">' > target/doc/index.html",
+  "mdbook build docs",
+  "tools/ci/docs-site.sh",
+  "tools/ci/docs-site-check.sh",
 ]
 
 [tasks.book]
 description = "Build the repo book; output in target/book"
 run = "mdbook build docs"
+
+[tasks.docs-serve]
+description = "Build the full site (book + API), serve it at http://127.0.0.1:3000 and rebuild on change"
+# miniserve looks files up per request, so it keeps serving target/site while
+# watchexec has `docs` delete and rebuild it. A failed rebuild (say, a rustdoc
+# warning) is printed and the watch carries on. Reload the browser by hand.
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+mise run docs
+miniserve target/site --index index.html --interfaces "${HOST:-127.0.0.1}" \
+  --port "${PORT:-3000}" &
+server=$!
+trap 'kill "$server"' EXIT
+watchexec --postpone --debounce 1s \
+  --watch docs/src --watch docs/book.toml --watch crates --watch README.md \
+  -- mise run docs
+'''
 
 [tasks.package]
 description = "Check the library packages cleanly and the CLI installs and runs"
