@@ -14,3 +14,6 @@ pub mod releasing {}
 
 #[doc = include_str!("../docs/cli.md")]
 pub mod cli {}
+
+#[doc = include_str!("../docs/template.md")]
+pub mod template {}

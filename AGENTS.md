@@ -15,6 +15,7 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 | ------------------------------- | ----------------------------------------------------- |
 | `crates/rust-repo-template`     | Library crate: all logic, pure and unit-tested        |
 | `crates/rust-repo-template-cli` | Binary: argument parsing and output only              |
+| `xtask`                         | Repo maintenance (`cargo xtask rename`); not released |
 | `crates/*/tests/`               | Integration tests (`assert_cmd` for the CLI)          |
 | `mise.toml`                     | Tool versions and tasks; `mise tasks` lists them      |
 
@@ -30,7 +31,7 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 
 ```bash
 mise run fmt        # format
-mise run verify     # everything CI checks: fmt-check, clippy, deny, typos, Markdown lint, tests, coverage
+mise run verify     # fmt-check, clippy, deny, typos, Markdown lint, tests, coverage, docs
 ```
 
 Faster inner loop: `mise run lint test`. A change is not done while any check fails. Fix the code rather than adding `#[allow(...)]`; if an allow is truly needed, put it on the smallest item and add a comment saying why.

@@ -18,7 +18,7 @@ To cut a release candidate, set the version by hand on a branch (for example `0.
 
 ## Changing what gets built
 
-Edit `dist-workspace.toml`, then run `mise run dist-generate` and commit the regenerated `release.yml`. `release.yml` also runs on every PR and fails if it is out of date with the config. `mise run dist-plan` lists the artifacts.
+Edit `dist-workspace.toml`, then run `mise run dist-generate` and commit the regenerated `release.yml`. The `dist-check` git hook, which CI also runs, fails if `release.yml` is out of date with the config. `mise run dist-plan` lists the artifacts.
 
 ## Bumping the toolchain
 

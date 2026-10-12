@@ -1,6 +1,29 @@
 # rust-repo-template
 
+[![ci](https://github.com/idoudali/rust-repo-template/actions/workflows/ci.yml/badge.svg)](https://github.com/idoudali/rust-repo-template/actions/workflows/ci.yml)
+[![docs](https://github.com/idoudali/rust-repo-template/actions/workflows/pages.yml/badge.svg)](https://idoudali.github.io/rust-repo-template/)
+
 A template for Rust command-line projects: a Cargo workspace with a library crate and a CLI crate, strict lints, a coverage gate, git hooks, agent support, CI, rustdoc, and per-platform release binaries.
+
+## Use this template
+
+Choose **Use this template** on GitHub, then rename the copy:
+
+```bash
+cargo xtask rename my-tool --owner my-github-user
+```
+
+Pass `--owner` when the new repo lives under a different GitHub user or organization; the release workflow only runs for the owner it names. The [template guide](./crates/rust-repo-template/docs/template.md) covers the repository settings to change after that: toolchain image visibility, Pages, the `main` ruleset, and the release token.
+
+## Install
+
+Release binaries for Linux (`x86_64` and arm64, static musl) and macOS (arm64) come from the [latest release](https://github.com/idoudali/rust-repo-template/releases/latest):
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/idoudali/rust-repo-template/releases/latest/download/rust-repo-template-cli-installer.sh | sh
+```
+
+Other platforms can build from source with `cargo install --locked --git https://github.com/idoudali/rust-repo-template rust-repo-template-cli`.
 
 ## Quick start
 
@@ -27,6 +50,7 @@ Every tool version lives in [`mise.toml`](./mise.toml). Pick one of:
 | ------------------------------- | ---------------------------------------------- |
 | `crates/rust-repo-template`     | Library crate `rust_repo_template`: the logic  |
 | `crates/rust-repo-template-cli` | Binary `rust-repo-template`: the clap CLI      |
+| `xtask`                         | Repo tasks: `cargo xtask rename`               |
 | `rust-toolchain.toml`           | Pinned Rust toolchain                          |
 | `mise.toml`                     | Tool versions and tasks                        |
 | `mise.lock`                     | Tool checksums and download URLs per platform  |
@@ -37,6 +61,10 @@ Every tool version lives in [`mise.toml`](./mise.toml). Pick one of:
 ## Coding agents
 
 [`AGENTS.md`](./AGENTS.md) holds the instructions every agent follows. Claude Code, Cursor, and Copilot each get a thin pointer to it, plus Claude hooks that run rustfmt and clippy after edits.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md). Documentation, including the guides, is published at <https://idoudali.github.io/rust-repo-template/>.
 
 ## License
 

@@ -96,6 +96,9 @@ jobs:
       - name: Package and install
         if: ${{ !cancelled() }}
         run: mise run package
+      - name: Template rename builds
+        if: ${{ !cancelled() }}
+        run: mise run rename-check
       - name: MSRV (Rust 1.85)
         if: ${{ !cancelled() }}
         env:
