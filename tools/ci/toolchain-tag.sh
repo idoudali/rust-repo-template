@@ -15,7 +15,7 @@ inputs=(
   mise.lock
   mise.msrv.toml
   rust-toolchain.toml
-  tests/CI-infra/toolchain-smoke.sh
+  docker/toolchain-smoke.sh
 )
 if command -v sha256sum > /dev/null; then
   hash=$(cat "${inputs[@]}" | sha256sum | cut -c1-16)
