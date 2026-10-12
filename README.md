@@ -32,6 +32,7 @@ Every tool version lives in [`mise.toml`](./mise.toml). Pick one of:
 | `mise.lock`                     | Tool checksums and download URLs per platform  |
 | `docker/`                       | Toolchain image                                |
 | `tests/CI-infra/`               | Tests for the CI setup (image smoke test)      |
+| `tools/ci/`                     | Shell scripts CI runs, also wrapped as tasks   |
 
 ## Coding agents
 

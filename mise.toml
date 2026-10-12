@@ -63,6 +63,24 @@ run = "mise lock"
 description = "Build the toolchain image locally as $IMAGE:local"
 run = "docker build -f docker/toolchain.Dockerfile -t $IMAGE:local ."
 
+# The toolchain-image.yml workflow runs the same tools/ci scripts; CI tags the
+# image with this hash and reuses it while no input changes.
+[tasks.toolchain-tag]
+description = "Print the content-hash tag CI gives the toolchain image"
+run = "tools/ci/toolchain-tag.sh"
+
+[tasks.toolchain-resolve]
+description = "Show whether the toolchain image for this tree is in GHCR"
+run = "tools/ci/toolchain-resolve.sh"
+
+[tasks.toolchain-smoke]
+description = "Run the image smoke test (default $IMAGE:local, or pass an image)"
+run = "tools/ci/toolchain-smoke.sh"
+
+[tasks.toolchain-info]
+description = "Print tool versions, including the host C compiler and SDK"
+run = "tools/ci/show-toolchain.sh"
+
 # The host checkout is bind-mounted (not copied) at /src, so edits on either
 # side are the same files. The container runs as the image's `ubuntu` user,
 # uid 1000 and gid 1000. On a Linux host whose user is also 1000:1000 (the
@@ -120,6 +138,10 @@ run = [
   "cargo llvm-cov nextest --workspace --all-features --locked --fail-under-lines 100 --lcov --output-path lcov.info",
   "cargo llvm-cov report --html",
 ]
+
+[tasks.commits-check]
+description = "Check that commits since BASE (default origin/main) are conventional"
+run = "tools/ci/check-commits.sh"
 
 [tasks.hooks-install]
 description = "Install the pre-commit and commit-msg git hooks"
