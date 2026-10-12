@@ -18,6 +18,4 @@ cargo run -p rust-repo-template-cli -- --help
 
 ## Use the library
 
-```rust
-println!("rust-repo-template {}", rust_repo_template::VERSION);
-```
+The library exposes [`VERSION`](api/rust_repo_template/constant.VERSION.html), [`greeting`](api/rust_repo_template/fn.greeting.html) and [`Info`](api/rust_repo_template/struct.Info.html); see the [API reference](api/rust_repo_template/index.html).

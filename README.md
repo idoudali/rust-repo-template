@@ -13,7 +13,7 @@ Choose **Use this template** on GitHub, then rename the copy:
 cargo xtask rename my-tool --owner my-github-user
 ```
 
-Pass `--owner` when the new repo lives under a different GitHub user or organization; the release workflow only runs for the owner it names. The [template guide](./crates/rust-repo-template/docs/template.md) covers the repository settings to change after that: toolchain image visibility, Pages, the `main` ruleset, and the release token.
+Pass `--owner` when the new repo lives under a different GitHub user or organization; the release workflow only runs for the owner it names. The [template guide](./docs/src/template.md) covers the repository settings to change after that: toolchain image visibility, Pages, the `main` ruleset, and the release token.
 
 ## Install
 

@@ -2,3 +2,8 @@
 # Long lines are fine in prose; tables and links make them unavoidable.
 disable = ["MD013"]
 exclude = ["target", "vendor", "CHANGELOG.md"]
+
+# The book links into the rustdoc output, which only exists once the Pages
+# site is assembled.
+[per-file-ignores]
+"docs/src/*.md" = ["MD057"]

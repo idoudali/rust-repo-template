@@ -4,8 +4,6 @@
 
 use std::fmt;
 
-pub mod guide;
-
 /// Version of this crate, taken from `Cargo.toml` at build time.
 ///
 /// # Examples
