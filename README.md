@@ -13,19 +13,17 @@ Choose **Use this template** on GitHub, then rename the copy:
 cargo xtask rename my-tool --owner my-github-user
 ```
 
-The [template guide](./crates/rust-repo-template/docs/template.md) covers the repository settings to change after that: toolchain image visibility, Pages, the `main` ruleset, and the release token.
+Pass `--owner` when the new repo lives under a different GitHub user or organization; the release workflow only runs for the owner it names. The [template guide](./crates/rust-repo-template/docs/template.md) covers the repository settings to change after that: toolchain image visibility, Pages, the `main` ruleset, and the release token.
 
 ## Install
 
-Release binaries for Linux, macOS, and Windows come from the [latest release](https://github.com/idoudali/rust-repo-template/releases/latest):
+Release binaries for Linux (`x86_64` and arm64, static musl) and macOS (arm64) come from the [latest release](https://github.com/idoudali/rust-repo-template/releases/latest):
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/idoudali/rust-repo-template/releases/latest/download/rust-repo-template-cli-installer.sh | sh
 ```
 
-```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/idoudali/rust-repo-template/releases/latest/download/rust-repo-template-cli-installer.ps1 | iex"
-```
+Other platforms can build from source with `cargo install --locked --git https://github.com/idoudali/rust-repo-template rust-repo-template-cli`.
 
 ## Quick start
 

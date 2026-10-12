@@ -126,7 +126,7 @@ description = "Lint Markdown files"
 run = "rumdl check ."
 
 [tasks.verify]
-description = "Run every check CI runs"
+description = "Run the main checks: fmt, clippy, deny, typos, Markdown, tests, coverage, docs"
 depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint", "test", "coverage", "docs"]
 
 [tasks.test]

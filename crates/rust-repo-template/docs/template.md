@@ -11,9 +11,13 @@ cargo xtask rename my-tool --owner my-github-user --dry-run   # preview
 cargo xtask rename my-tool --owner my-github-user
 ```
 
-This replaces `rust-repo-template` and `rust_repo_template` in every file, moves `crates/rust-repo-template*` to `crates/my-tool*`, and with `--owner` points GitHub, GHCR and Pages links at the new owner. It skips `.git`, `target`, and the `xtask` crate itself. Then update `authors` in `Cargo.toml`, the README description, and `CHANGELOG.md`, run `mise run verify`, and commit.
+This replaces `rust-repo-template` and `rust_repo_template` in every file, moves `crates/rust-repo-template*` to `crates/my-tool*`, and with `--owner` points the GitHub, GHCR and Pages links at the new owner. It skips `.git`, `target`, `vendor`, `site`, and the `xtask` crate itself.
 
-`mise run rename-check` does the same on a scratch copy of the repo and builds the result; CI runs it on every pull request, so the rename keeps working as the template changes.
+Pass `--owner` unless the new repo stays under the template's owner. `release-plz.yml` runs only for the owner it names, and the dev container pulls the toolchain image from the owner's GHCR, so without it releases never start and the dev container uses the template's image.
+
+Then update `authors` in `Cargo.toml`, the README description, and `CHANGELOG.md`, run `mise run verify`, and commit.
+
+`mise run rename-check` does the same on a scratch copy of the repo and builds the result. CI runs it in the `checks (linux)` job on every pull request, so the rename keeps working as the template changes.
 
 ## 3. Repository settings
 
@@ -25,11 +29,11 @@ This replaces `rust-repo-template` and `rust_repo_template` in every file, moves
 | Ruleset on `main`                   | Settings → Rules → Rulesets                             | Require a PR, the status checks below, and no force pushes                                        |
 | Release App (optional, recommended) | Settings → Secrets and variables → Actions              | `RELEASE_APP_ID` variable and `RELEASE_APP_PRIVATE_KEY` secret; see below                         |
 
-Required status checks for the ruleset: `hooks (prek)`, `test and coverage (linux)`, `rustdoc`, `package and install`, `cargo deny`, `msrv (Rust 1.85)`, `zizmor (workflow audit)`, `conventional commits`, and the three `test (<os>)` jobs.
+Required status check for the ruleset: `checks (linux)`. It is one job that runs every Linux check (hooks, zizmor, tests, coverage, rustdoc, packaging, the rename check, MSRV, and conventional commits). CI skips draft pull requests, so the check starts once a PR is marked ready for review. macOS, Windows, and Linux arm64 are tested only on release tags, by `release-checks.yml`, which blocks the release if they fail.
 
 ## 4. Release token
 
-PRs opened with the default `GITHUB_TOKEN` do not trigger other workflows, so the release-plz Release PR would sit without CI. Create a GitHub App owned by you with **Contents** and **Pull requests** set to read and write, install it on the repo, then save its id as the `RELEASE_APP_ID` variable and a private key as the `RELEASE_APP_PRIVATE_KEY` secret. `release-plz.yml` uses the App token when the variable is set and falls back to `GITHUB_TOKEN` otherwise.
+A tag or PR created with the default `GITHUB_TOKEN` starts no other workflow. Without a token from elsewhere, CI does not run on the release-plz Release PR, and the `v<version>` tag release-plz pushes never starts `release.yml`, so nothing gets built. Create a GitHub App owned by you with **Contents** and **Pull requests** set to read and write, install it on the repo, then save its id as the `RELEASE_APP_ID` variable and a private key as the `RELEASE_APP_PRIVATE_KEY` secret. `release-plz.yml` uses the App token when the variable is set and falls back to `GITHUB_TOKEN` otherwise. The releasing guide covers the rest of the release flow.
 
 ## 5. Optional cleanup
 

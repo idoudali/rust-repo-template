@@ -12,10 +12,14 @@ All commands are mise tasks; `mise tasks` lists them.
 | `coverage`             | llvm-cov with a 100% line gate; HTML in `target/llvm-cov`   |
 | `deny`                 | Advisories, licenses, bans and sources                      |
 | `docs`                 | This documentation, with rustdoc warnings denied            |
-| `verify`               | Everything CI runs                                          |
+| `verify`               | fmt, clippy, deny, typos, Markdown, tests, coverage, docs   |
 | `hooks`                | Every git hook on all files (prek)                          |
+| `package`              | Package the library and install the CLI                     |
+| `rename-check`         | Run `cargo xtask rename` on a copy and build it (slow)      |
 
 `MISE_ENV=msrv mise run check` type-checks on the minimum supported Rust version.
+
+CI runs `hooks`, `test`, `coverage`, `docs`, `package`, `rename-check` and the MSRV check in one `checks (linux)` job, plus the conventional commit check on pull requests.
 
 ## Toolchain image
 
