@@ -2,7 +2,8 @@
 # The toolchain image (docker/toolchain.Dockerfile), CI, and developer
 # machines all install from this file. Bump a version here and nowhere else.
 # Rust is pinned twice on purpose: rust-toolchain.toml is read by rustup,
-# editors and dist; `mise run toolchain-check` keeps the two in sync.
+# editors and dist; `mise run toolchain-check` keeps the two in sync, and
+# also checks the MSRV and mise versions that are pinned in several files.
 
 [tools]
 # One Rust here: mise exports RUSTUP_TOOLCHAIN for it, so a second entry
@@ -45,18 +46,8 @@ lockfile_platforms = ["linux-x64", "linux-arm64", "macos-x64", "macos-arm64", "w
 IMAGE = "ghcr.io/idoudali/rust-repo-template-toolchain"
 
 [tasks.toolchain-check]
-description = "Fail if rust-toolchain.toml and mise.toml pin different Rust versions"
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-file=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
-mise_rust=$(sed -n 's/^rust = .*version = "\([^"]*\)".*/\1/p' mise.toml)
-if [ "$file" != "$mise_rust" ]; then
-  echo "rust-toolchain.toml pins $file but mise.toml pins $mise_rust" >&2
-  exit 1
-fi
-echo "Rust $file pinned consistently"
-'''
+description = "Fail if the Rust, MSRV or mise versions pinned in several files disagree"
+run = "tools/ci/toolchain-check.sh"
 
 [tasks.lock]
 description = "Refresh mise.lock for every platform after changing [tools]"
