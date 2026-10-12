@@ -29,3 +29,7 @@ rustc-ice-*.txt
 lcov.info
 .DS_Store
 .claude/settings.local.json
+
+# Created by `MISE_ENV=msrv mise run ...`; the MSRV is pinned by version
+# in mise.msrv.toml, so there is nothing to lock
+mise.msrv.lock
