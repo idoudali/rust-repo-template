@@ -208,6 +208,14 @@ cargo install --locked --path crates/rust-repo-template-cli --root "$root" --for
 "$root/bin/rust-repo-template" --version
 '''
 
+[tasks.release]
+description = "Bump the version and CHANGELOG.md and open the release PR (optional arg: version)"
+run = "tools/release.sh prepare"
+
+[tasks.release-tag]
+description = "Tag main with the merged release version and push it, which starts release.yml"
+run = "tools/release.sh tag"
+
 [tasks.dist-plan]
 description = "Show which release artifacts dist would build"
 run = "dist plan"
