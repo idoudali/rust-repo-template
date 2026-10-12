@@ -8,20 +8,25 @@ All commands are mise tasks; `mise tasks` lists them.
 | ---------------------- | ----------------------------------------------------------- |
 | `fmt` / `fmt-check`    | Format, or check formatting                                 |
 | `lint`                 | Clippy with the pedantic and cargo groups, warnings denied  |
-| `test`                 | nextest plus doctests                                       |
+| `test`                 | nextest plus doctests (quick loop, no coverage)             |
 | `coverage`             | llvm-cov with a 100% line gate; HTML in `target/llvm-cov`   |
+| `doctest`              | Doc tests only                                              |
+| `test-xtask`           | xtask unit tests, which the coverage gate excludes          |
 | `deny`                 | Advisories, licenses, bans and sources                      |
 | `docs`                 | Book plus rustdoc in `target/site`, warnings denied         |
 | `book`                 | Only the book, in `target/book`                             |
 | `docs-serve`           | Serve the full site, rebuilding it when sources change      |
-| `verify`               | fmt, clippy, deny, typos, Markdown, tests, coverage, docs   |
-| `hooks`                | Every git hook on all files (prek)                          |
+| `hooks`                | Every git hook on all files (prek): fmt, clippy, deny, typos, Markdown, workflow and shell linters |
+| `verify`               | `hooks`, `coverage`, `doctest`, `test-xtask` and `docs`     |
 | `package`              | Package the library and install the CLI                     |
 | `rename-check`         | Run `cargo xtask rename` on a copy and build it (slow)      |
+| `msrv`                 | Type-check on the minimum supported Rust version            |
+| `ci`                   | `verify`, `package`, `rename-check` and `msrv`: what CI runs |
+| `toolchain-bump`       | Open a PR moving the pinned Rust to the latest stable       |
 
-`MISE_ENV=msrv mise run check` type-checks on the minimum supported Rust version.
+The git hooks call the `fmt-check`, `lint` and `deny` tasks, so each command is defined once, in `mise.toml`.
 
-CI runs `hooks`, `test`, `coverage`, `docs`, `package`, `rename-check` and the MSRV check in one `checks (linux)` job, plus the conventional commit check on pull requests.
+CI's `checks (linux)` job runs `mise run ci`, so a green `mise run ci` locally predicts a green job. The job also runs the online zizmor audit and, on pull requests, the conventional commit check, and uploads the coverage report.
 
 ## Toolchain image
 

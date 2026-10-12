@@ -128,16 +128,24 @@ run = "typos"
 description = "Lint Markdown files"
 run = "rumdl check ."
 
-[tasks.verify]
-description = "Run the main checks: fmt, clippy, deny, typos, Markdown, tests, coverage, docs"
-depends = ["toolchain-check", "fmt-check", "lint", "deny", "typos", "mdlint", "test", "coverage", "docs"]
-
 [tasks.test]
-description = "Run unit, integration and doc tests"
-run = [
-  "cargo nextest run --workspace --all-features --locked",
-  "cargo test --doc --workspace --all-features --locked",
-]
+description = "Run unit, integration and doc tests (quick local loop; no coverage)"
+depends = ["test-nextest", "doctest"]
+
+[tasks.test-nextest]
+description = "Run the unit and integration tests of every crate with nextest"
+run = "cargo nextest run --workspace --all-features --locked"
+
+[tasks.doctest]
+description = "Run the doc tests, which nextest does not run"
+run = "cargo test --doc --workspace --all-features --locked"
+
+# coverage runs the whole suite except xtask (its rename code is exercised by
+# the slow rename-check, so it stays outside the 100% gate), so verify and CI
+# run xtask's unit tests here instead.
+[tasks.test-xtask]
+description = "Run the xtask unit tests, which the coverage gate excludes"
+run = "cargo nextest run --locked -p xtask"
 
 [tasks.coverage]
 description = "Line coverage with a 100% gate; writes lcov.info and target/llvm-cov/html"
@@ -145,6 +153,22 @@ run = [
   "cargo llvm-cov nextest --workspace --exclude xtask --all-features --locked --fail-under-lines 100 --lcov --output-path lcov.info",
   "cargo llvm-cov report --html",
 ]
+
+[tasks.msrv]
+description = "Type-check on the minimum supported Rust version"
+run = "MISE_ENV=msrv mise run check"
+
+# hooks already cover fmt-check, lint, deny, typos, mdlint and toolchain-check.
+# coverage runs the nextest suite, doctest and test-xtask the rest of `test`.
+# These run in parallel; they only contend for cargo's build lock.
+[tasks.verify]
+description = "The main checks: git hooks, coverage-gated tests, doc tests, xtask tests, docs"
+depends = ["hooks", "coverage", "doctest", "test-xtask", "docs"]
+
+# CI runs this, plus the online zizmor audit and the commit check.
+[tasks.ci]
+description = "Everything CI runs on Linux: verify, package, rename-check and the MSRV check"
+depends = ["verify", "package", "rename-check", "msrv"]
 
 [tasks.commits-check]
 description = "Check that commits since BASE (default origin/main) are conventional"
@@ -215,6 +239,10 @@ run = "tools/release.sh prepare"
 [tasks.release-tag]
 description = "Tag main with the merged release version and push it, which starts release.yml"
 run = "tools/release.sh tag"
+
+[tasks.toolchain-bump]
+description = "Open a PR moving the pinned Rust to the latest stable release"
+run = "tools/toolchain-bump.sh"
 
 [tasks.dist-plan]
 description = "Show which release artifacts dist would build"

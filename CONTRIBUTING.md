@@ -16,7 +16,7 @@ The hooks run formatting, lints, spelling, workflow audits, and a conventional-c
 
 1. Branch from `main`.
 2. Make the change with tests. Line coverage must stay at 100% (`mise run coverage`).
-3. Run `mise run verify` for the main checks, and `mise run hooks` for the workflow and shell linters. CI also checks packaging, the MSRV, the template rename (`mise run rename-check`), and the commit messages.
+3. Run `mise run verify` for the main checks (it includes the git hooks, so the workflow and shell linters too). `mise run ci` runs exactly what CI runs, adding packaging, the MSRV and the template rename check (`mise run rename-check`); CI also checks the commit messages.
 4. Commit with [conventional commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `build:`, `ci:`, `test:`, `refactor:`, `chore:`). release-plz builds the changelog and the next version from them.
 5. Open a PR against `main`. CI skips draft PRs; it runs once the PR is marked ready for review.
 
