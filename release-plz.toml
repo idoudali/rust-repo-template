@@ -1,5 +1,6 @@
-# release-plz owns versioning: on every push to main it opens or updates a
-# Release PR (version bump, Cargo.lock, CHANGELOG.md). When that PR merges it
+# release-plz owns versioning, run locally by `mise run release`
+# (tools/release.sh): `release-plz update` bumps the version, Cargo.lock and
+# CHANGELOG.md for the release PR. After it merges, `mise run release-tag`
 # pushes the `v<version>` tag, and dist's release.yml builds the binaries and
 # creates the GitHub Release. Nothing is published to crates.io.
 
@@ -11,7 +12,6 @@ git_only = true
 # dist creates the GitHub Release from the tag.
 git_release_enable = false
 semver_check = false
-pr_labels = ["release"]
 
 # Both crates share one version: the same version_group on each.
 [[package]]

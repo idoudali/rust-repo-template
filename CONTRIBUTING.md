@@ -26,4 +26,4 @@ The hooks run formatting, lints, spelling, workflow audits, and a conventional-c
 
 ## Releases
 
-Maintainers merge the Release PR that release-plz keeps open; see the [releasing guide](./docs/src/releasing.md).
+Maintainers cut releases with `mise run release` and `mise run release-tag`; see the [releasing guide](./docs/src/releasing.md).
