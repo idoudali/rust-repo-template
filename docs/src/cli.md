@@ -16,11 +16,7 @@ HELLO, ADA!
 HELLO, ADA!
 ```
 
-The library function behind it:
-
-```rust
-assert_eq!(rust_repo_template::greeting("Ada", true), "HELLO, ADA!");
-```
+The library function behind it is [`greeting`](api/rust_repo_template/fn.greeting.html) in the API reference.
 
 ## `info`
 
@@ -35,10 +31,7 @@ $ rust-repo-template info --json
 {"version":"0.1.0","target":"x86_64-unknown-linux-musl","os":"linux","arch":"x86_64"}
 ```
 
-```rust
-let info = rust_repo_template::Info::current();
-assert!(info.to_json().starts_with(r#"{"version":""#));
-```
+The library type behind it is [`Info`](api/rust_repo_template/struct.Info.html) in the API reference.
 
 ## Exit codes
 

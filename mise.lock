@@ -107,6 +107,11 @@ version = "7.0.0"
 backend = "cargo:cocogitto"
 specifiers = ["7.0.0"]
 
+[[tools."cargo:mdbook"]]
+version = "0.5.4"
+backend = "cargo:mdbook"
+specifiers = ["0.5.4"]
+
 [[tools."cargo:prek"]]
 version = "0.5.5"
 backend = "cargo:prek"

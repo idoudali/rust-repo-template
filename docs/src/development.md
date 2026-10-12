@@ -37,4 +37,4 @@ CI tags the image with a hash of its inputs (`mise run toolchain-tag`) and build
 
 ## Documentation
 
-Every public item needs a `///` doc comment; `missing_docs` and `rustdoc -D warnings` enforce it. Guides like this one live in `crates/rust-repo-template/docs/` and are included as doc-only modules under `guide`.
+Every public item needs a `///` doc comment; `missing_docs` and `rustdoc -D warnings` enforce it. Guides like this one live in `docs/src/` and build with `mise run book`.

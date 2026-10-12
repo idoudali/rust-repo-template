@@ -1,0 +1,9 @@
+[book]
+title = "rust-repo-template"
+src = "src"
+
+[build]
+build-dir = "../target/book"
+
+[output.html]
+git-repository-url = "https://github.com/idoudali/rust-repo-template"

@@ -26,4 +26,4 @@ The hooks run formatting, lints, spelling, workflow audits, and a conventional-c
 
 ## Releases
 
-Maintainers merge the Release PR that release-plz keeps open; see the [releasing guide](./crates/rust-repo-template/docs/releasing.md).
+Maintainers merge the Release PR that release-plz keeps open; see the [releasing guide](./docs/src/releasing.md).
