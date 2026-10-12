@@ -2,6 +2,18 @@
 //!
 //! Parsing and printing only; the logic lives in the `rust_repo_template`
 //! library crate.
+//!
+//! # Commands
+//!
+//! - `greet <NAME> [--count <N>] [--shout]` prints `Hello, <NAME>!` `N`
+//!   times (1 to 255, default 1), in capitals with `--shout`.
+//! - `info [--json]` prints the version, target triple, OS, and
+//!   architecture, as text or as one line of JSON.
+//!
+//! # Exit codes
+//!
+//! - `0`: success.
+//! - `2`: invalid arguments; usage is printed on stderr.
 
 use clap::{Parser, Subcommand};
 use rust_repo_template::{Info, greeting};

@@ -1,6 +1,27 @@
-// README.md here is a symlink to the workspace README, so the same path
-// works in the workspace and in the packaged crate.
+// README.md is this crate's own front page: rustdoc shows it as the crate
+// docs, and it ships in the packaged crate.
 #![doc = include_str!("../README.md")]
+//!
+//! # What it provides
+//!
+//! - [`greeting`] builds `Hello, <name>!`, in capitals on request.
+//! - [`Info`] holds the version, target triple, OS, and architecture.
+//!   [`Info::current`] fills it for the running binary, [`Info::to_json`]
+//!   renders one line of JSON, and its [`Display`](std::fmt::Display)
+//!   implementation renders four lines of text.
+//! - [`VERSION`] is the crate version from `Cargo.toml`.
+//!
+//! # How the CLI uses it
+//!
+//! The `greet` command calls [`greeting`] once per requested repetition. The
+//! `info` command prints [`Info::current`] as text, or as JSON with `--json`.
+//! The binary crate holds argument parsing and printing only.
+//!
+//! # Build-time facts
+//!
+//! Cargo gives the `TARGET` variable only to build scripts, so `build.rs`
+//! records it as `BUILD_TARGET`, which [`Info::current`] reads into
+//! [`Info::target`].
 
 use std::fmt;
 
