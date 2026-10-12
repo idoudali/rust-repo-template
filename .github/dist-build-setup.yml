@@ -2,7 +2,7 @@
 # dist-workspace.toml), so the builds use the Rust pinned in mise.toml.
 # Run `dist generate` after editing this file.
 - name: Install Rust from mise.toml
-  uses: jdx/mise-action@v3.6.3
+  uses: jdx/mise-action@v5.1.1
   with:
     version: 2026.10.4
     install_args: rust

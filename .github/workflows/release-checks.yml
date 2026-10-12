@@ -39,10 +39,10 @@ jobs:
       # list of installed Xcode versions.
       XCODE_VERSION: "16.4"
     steps:
-      - uses: actions/checkout@v6.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v3.6.3
+      - uses: jdx/mise-action@v5.1.1
         with:
           version: 2026.10.4
           # Only what the checks need; the full manifest is for the image.
