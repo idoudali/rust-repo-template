@@ -29,10 +29,10 @@ repos:
   - repo: local
     hooks:
       - id: toolchain-check
-        name: rust-toolchain.toml matches mise.toml
+        name: pinned Rust, MSRV and mise versions agree
         entry: mise run toolchain-check
         language: system
-        files: ^(rust-toolchain\.toml|mise\.toml)$
+        files: ^(rust-toolchain\.toml|mise\.toml|mise\.msrv\.toml|Cargo\.toml|docker/toolchain\.Dockerfile|\.github/.*\.ya?ml|tools/ci/toolchain-check\.sh)$
         pass_filenames: false
       - id: cargo-fmt
         name: cargo fmt

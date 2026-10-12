@@ -34,7 +34,9 @@ FROM base AS tools
 
 # mise itself is the one tool pinned here rather than in mise.toml: the
 # release binary, checked against these SHA-256 sums (from the release's
-# SHASUMS256.txt). Bump the version and both sums together.
+# SHASUMS256.txt). Bump the version and both sums together, and the
+# `version:` of each jdx/mise-action in .github; `mise run toolchain-check`
+# fails when they differ.
 ARG MISE_VERSION=v2026.10.4
 ARG MISE_SHA256_AMD64=2b8ce21f550872807bcaabf45b6bc5c64bfbd6dc3bf49dd4e67de700ef3ceb75
 ARG MISE_SHA256_ARM64=9013ce1d7d9bbbf65254cda178562f5450c474a705907c18b77e6b678bb10041
