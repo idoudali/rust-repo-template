@@ -13,6 +13,8 @@ cargo xtask rename my-tool --owner my-github-user
 
 This replaces `rust-repo-template` and `rust_repo_template` in every file, moves `crates/rust-repo-template*` to `crates/my-tool*`, and with `--owner` points GitHub, GHCR and Pages links at the new owner. It skips `.git`, `target`, and the `xtask` crate itself. Then update `authors` in `Cargo.toml`, the README description, and `CHANGELOG.md`, run `mise run verify`, and commit.
 
+`mise run rename-check` does the same on a scratch copy of the repo and builds the result; CI runs it on every pull request, so the rename keeps working as the template changes.
+
 ## 3. Repository settings
 
 | Setting                             | Where                                                   | Why                                                                                               |
