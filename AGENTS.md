@@ -31,12 +31,12 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 
 ```bash
 mise run fmt        # format
-mise run verify     # fmt-check, clippy, deny, typos, Markdown lint, tests, coverage, docs (book + rustdoc)
+mise run verify     # git hooks (fmt, clippy, deny, typos, Markdown, workflow linters), tests with the coverage gate, docs
 ```
 
 To preview the docs locally, run `mise run docs-serve` (blocks; serves `http://127.0.0.1:3000` and rebuilds on change; `PORT`/`HOST` override).
 
-Faster inner loop: `mise run lint test`. A change is not done while any check fails. Fix the code rather than adding `#[allow(...)]`; if an allow is truly needed, put it on the smallest item and add a comment saying why.
+Faster inner loop: `mise run lint test`. `mise run ci` runs everything CI does (adds packaging, the template rename check and the MSRV check). A change is not done while any check fails. Fix the code rather than adding `#[allow(...)]`; if an allow is truly needed, put it on the smallest item and add a comment saying why.
 
 Coverage is gated at 100% of lines. New code needs tests in the same change.
 

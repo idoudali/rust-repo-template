@@ -33,6 +33,8 @@ json_field() {
   printf '%s' "$1" | jq -r "$2 // empty" 2>/dev/null
 }
 
+# Same flags as `mise run lint`, plus --message-format short so the output can
+# be filtered down to findings; that is why it does not call the mise task.
 clippy() {
   cargo clippy --workspace --all-targets --all-features --locked \
     --message-format short -- -D warnings 2>&1 | grep -E '(^|: )(error|warning)' || true

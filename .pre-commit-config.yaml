@@ -5,8 +5,10 @@
 # wherever the mise tools are on PATH: inside the toolchain image (dev
 # container, CI), or on the host after `mise install` with mise activated in
 # your shell (`mise activate`) or its shims directory on PATH. Otherwise, for
-# example when a GUI client runs git, they fail with "command not found". prek runs the pre-commit-hooks checks below
-# natively, so no Python is needed.
+# example when a GUI client runs git, they fail with "command not found".
+# prek runs the pre-commit-hooks checks below natively, so no Python is
+# needed. The cargo hooks call the mise tasks, so each command is written once
+# in mise.toml; none of them may call `verify`, which runs these hooks.
 default_install_hook_types: [pre-commit, commit-msg]
 
 repos:
@@ -34,19 +36,19 @@ repos:
         pass_filenames: false
       - id: cargo-fmt
         name: cargo fmt
-        entry: cargo fmt --all --check
+        entry: mise run fmt-check
         language: system
         types: [rust]
         pass_filenames: false
       - id: cargo-clippy
         name: cargo clippy
-        entry: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+        entry: mise run lint
         language: system
         types_or: [rust, toml]
         pass_filenames: false
       - id: cargo-deny
         name: cargo deny
-        entry: cargo deny --locked check
+        entry: mise run deny
         language: system
         files: (^|/)(Cargo\.(toml|lock)|deny\.toml)$
         pass_filenames: false

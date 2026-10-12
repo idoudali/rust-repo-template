@@ -59,11 +59,23 @@ jobs:
           fetch-depth: 0
       - uses: Swatinem/rust-cache@v2.9.2
       - run: mise ls --current && gcc --version | head -n 1
-      # fmt, clippy, cargo deny, typos, rumdl, actionlint, shellcheck and
-      # an offline zizmor; see .pre-commit-config.yaml.
-      - name: Hooks (prek)
+      # `mise run ci` is the same command you run locally. It runs the git
+      # hooks (fmt, clippy, cargo deny, typos, rumdl, actionlint, shellcheck,
+      # an offline zizmor; see .pre-commit-config.yaml), the tests with the
+      # coverage gate, docs, packaging, the rename check and the MSRV check.
+      # --continue-on-error reports every failing task, not just the first.
+      - name: Checks (mise run ci)
         if: ${{ !cancelled() }}
-        run: mise run hooks
+        run: mise run --continue-on-error ci
+      - uses: actions/upload-artifact@v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage
+          path: |
+            lcov.info
+            target/llvm-cov/html
+          retention-days: 14
+          if-no-files-found: ignore
       # zizmor is a static security checker for GitHub Actions workflows. It
       # flags template injection from untrusted inputs (PR titles, branch
       # names) into `run:` scripts, credentials left in checkouts, overly
@@ -75,35 +87,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: zizmor .github/workflows
-      - name: Test
-        if: ${{ !cancelled() }}
-        run: mise run test
-      - name: Coverage
-        id: coverage
-        if: ${{ !cancelled() }}
-        run: mise run coverage
-      - uses: actions/upload-artifact@v7.0.2
-        if: ${{ !cancelled() && steps.coverage.outcome == 'success' }}
-        with:
-          name: coverage
-          path: |
-            lcov.info
-            target/llvm-cov/html
-          retention-days: 14
-      - name: Docs
-        if: ${{ !cancelled() }}
-        run: mise run docs
-      - name: Package and install
-        if: ${{ !cancelled() }}
-        run: mise run package
-      - name: Template rename builds
-        if: ${{ !cancelled() }}
-        run: mise run rename-check
-      - name: MSRV (Rust 1.85)
-        if: ${{ !cancelled() }}
-        env:
-          MISE_ENV: msrv
-        run: rustc --version && mise run check
       - name: Conventional commits
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         env:

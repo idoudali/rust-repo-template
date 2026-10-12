@@ -11,10 +11,11 @@ Run from the repo root. Use the mise tasks so the pinned tool versions are used.
 mise run fmt          # rewrite formatting
 mise run lint         # clippy, pedantic + cargo groups, -D warnings
 mise run test         # nextest + doctests
-mise run verify       # everything CI runs, including deny and the 100% coverage gate
+mise run verify       # git hooks (fmt, clippy, deny, ...), 100% coverage gate, docs
+mise run ci           # verify plus packaging, rename-check and MSRV: what CI runs
 ```
 
-On a small change, `mise run fmt lint test` is enough before handing back; run `verify` before a commit.
+On a small change, `mise run fmt lint test` is enough before handing back; run `verify` before a commit (and `ci` when you touch packaging, `xtask` or the MSRV).
 
 ## Rules
 
