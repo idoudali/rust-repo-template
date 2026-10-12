@@ -24,6 +24,8 @@ cog --version
 prek --version
 typos --version
 rumdl --version
+mdbook --version
+miniserve --version
 zizmor --version
 actionlint --version
 shellcheck --version

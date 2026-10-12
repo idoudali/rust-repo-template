@@ -11,7 +11,9 @@ All commands are mise tasks; `mise tasks` lists them.
 | `test`                 | nextest plus doctests                                       |
 | `coverage`             | llvm-cov with a 100% line gate; HTML in `target/llvm-cov`   |
 | `deny`                 | Advisories, licenses, bans and sources                      |
-| `docs`                 | This documentation, with rustdoc warnings denied            |
+| `docs`                 | Book plus rustdoc in `target/site`, warnings denied         |
+| `book`                 | Only the book, in `target/book`                             |
+| `docs-serve`           | Serve the full site, rebuilding it when sources change      |
 | `verify`               | fmt, clippy, deny, typos, Markdown, tests, coverage, docs   |
 | `hooks`                | Every git hook on all files (prek)                          |
 | `package`              | Package the library and install the CLI                     |
@@ -38,3 +40,7 @@ CI tags the image with a hash of its inputs (`mise run toolchain-tag`) and build
 ## Documentation
 
 Every public item needs a `///` doc comment; `missing_docs` and `rustdoc -D warnings` enforce it. Guides like this one live in `docs/src/` and build with `mise run book`.
+
+`mise run docs-serve` builds the full site (book and API reference), serves it at <http://127.0.0.1:3000>, and rebuilds it whenever `docs/src`, `docs/book.toml`, the crates or the README change; reload the browser to see the result. A rebuild that fails, for example on a rustdoc warning, prints the error and keeps the last good site. `PORT` and `HOST` change where it listens, for example `PORT=8080 mise run docs-serve`.
+
+Inside the dev container, `127.0.0.1` is not reachable from the host; run `HOST=0.0.0.0 mise run docs-serve` instead.

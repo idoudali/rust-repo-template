@@ -90,7 +90,7 @@ jobs:
             lcov.info
             target/llvm-cov/html
           retention-days: 14
-      - name: Rustdoc
+      - name: Docs
         if: ${{ !cancelled() }}
         run: mise run docs
       - name: Package and install

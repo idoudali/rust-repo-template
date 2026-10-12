@@ -22,7 +22,7 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 ## Coding standard
 
 - Edition 2024, `rustfmt` with `max_width = 80`. Clippy `pedantic` and `cargo` groups are on; CI denies every warning.
-- `unsafe_code` is forbidden. Every public item needs a `///` doc comment (`missing_docs`); it becomes the rustdoc API reference.
+- `unsafe_code` is forbidden. Every public item needs a `///` doc comment (`missing_docs`); it becomes the rustdoc API reference. Repo guides live in `docs/src/` (mdBook).
 - Public functions get an `# Examples` section that compiles as a doctest.
 - Return `Result` for recoverable errors; no `unwrap()` or `expect()` outside tests and `main`.
 - Do not reformat files the task did not change.
@@ -31,8 +31,10 @@ This file is the source of truth for every coding agent (Claude Code, Cursor, Co
 
 ```bash
 mise run fmt        # format
-mise run verify     # fmt-check, clippy, deny, typos, Markdown lint, tests, coverage, docs
+mise run verify     # fmt-check, clippy, deny, typos, Markdown lint, tests, coverage, docs (book + rustdoc)
 ```
+
+To preview the docs locally, run `mise run docs-serve` (blocks; serves `http://127.0.0.1:3000` and rebuilds on change; `PORT`/`HOST` override).
 
 Faster inner loop: `mise run lint test`. A change is not done while any check fails. Fix the code rather than adding `#[allow(...)]`; if an allow is truly needed, put it on the smallest item and add a comment saying why.
 

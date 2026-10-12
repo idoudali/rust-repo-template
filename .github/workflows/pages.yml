@@ -1,6 +1,6 @@
 name: pages
 
-# Publishes the rustdoc site (API reference and guides) to GitHub Pages.
+# Publishes the repo book and the rustdoc API reference to GitHub Pages.
 # One-time repo setting: Pages source "GitHub Actions".
 
 on:
@@ -40,7 +40,7 @@ jobs:
       - run: mise run docs
       - uses: actions/upload-pages-artifact@v3.0.1
         with:
-          path: target/doc
+          path: target/site
 
   deploy:
     needs: build
