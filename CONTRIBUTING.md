@@ -22,7 +22,7 @@ The hooks run formatting, lints, spelling, workflow audits, and a conventional-c
 
 ## Code style
 
-[`AGENTS.md`](./AGENTS.md) is the full set of rules, for people and coding agents alike. The short version: rustfmt at 80 columns, clippy pedantic with warnings denied, no `unsafe`, docs on every public item, and logic in the library crate with the CLI as a thin layer.
+The coding standard is in [`AGENTS.md`](./AGENTS.md), for people and coding agents alike.
 
 ## Releases
 
