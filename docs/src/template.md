@@ -24,11 +24,10 @@ Then update `authors` in `Cargo.toml`, the README description, and `CHANGELOG.md
 | Setting                             | Where                                                   | Why                                                                                               |
 | ----------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Toolchain image visibility: public  | Your profile → Packages → `<name>-toolchain` → Settings | The first CI run publishes it private. Forks, the dev container, and `docker pull` need it public |
-| Actions can create PRs              | Settings → Actions → General → Workflow permissions     | The toolchain bump opens PRs                                                                      |
 | Pages source: GitHub Actions        | Settings → Pages                                        | `pages.yml` deploys the docs site (repo book and API reference)                                   |
 | Ruleset on `main`                   | Settings → Rules → Rulesets                             | Require a PR, the status checks below, and no force pushes                                        |
 
-Required status check for the ruleset: `checks (linux)`. It is one job that runs every Linux check (hooks, zizmor, tests, coverage, docs, packaging, the rename check, MSRV, and conventional commits). CI skips draft pull requests, so the check starts once a PR is marked ready for review. macOS, Windows, and Linux arm64 are tested only on release tags, by `release-checks.yml`, which blocks the release if they fail.
+Required status check for the ruleset: `checks (linux)`. It is one job that runs `mise run ci` (hooks, tests with the coverage gate, docs, packaging, the rename check, MSRV), the online zizmor audit, and conventional commits. CI skips draft pull requests, so the check starts once a PR is marked ready for review. macOS, Windows, and Linux arm64 are tested only on release tags, by `release-checks.yml`, which blocks the release if they fail.
 
 ## 4. Optional cleanup
 

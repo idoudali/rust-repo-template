@@ -19,4 +19,4 @@ Edit `dist-workspace.toml`, then run `mise run dist-generate` and commit the reg
 
 ## Bumping the toolchain
 
-`toolchain-bump.yml` opens a PR each month that moves `rust-toolchain.toml` and `mise.toml` to the latest stable Rust; other tools are bumped by editing `mise.toml`. Either change rebuilds the toolchain image in CI under a new tag.
+`mise run toolchain-bump` (from an up-to-date `main`) opens a PR that moves `rust-toolchain.toml`, `mise.toml` and `mise.lock` to the latest stable Rust; other tools are bumped by editing `mise.toml`. Dependabot does not track the toolchain, so run it when a new stable Rust ships. Either change rebuilds the toolchain image in CI under a new tag.
