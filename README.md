@@ -54,8 +54,7 @@ Every tool version lives in [`mise.toml`](./mise.toml). Pick one of:
 | `rust-toolchain.toml`           | Pinned Rust toolchain                          |
 | `mise.toml`                     | Tool versions and tasks                        |
 | `mise.lock`                     | Tool checksums and download URLs per platform  |
-| `docker/`                       | Toolchain image                                |
-| `tests/CI-infra/`               | Tests for the CI setup (image smoke test)      |
+| `docker/`                       | Toolchain image and its smoke test                             |
 | `tools/ci/`                     | Shell scripts CI runs, also wrapped as tasks   |
 
 ## Coding agents

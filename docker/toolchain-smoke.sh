@@ -3,8 +3,9 @@
 # reports its version, and the default Rust is the one in mise.toml.
 #
 # toolchain-image.yml runs it inside each freshly built image:
-#   docker run --rm -v "$PWD/tests/CI-infra:/ci:ro" toolchain:smoke \
-#     bash /ci/toolchain-smoke.sh
+#   docker run --rm -v "$PWD/docker/toolchain-smoke.sh:/ci/toolchain-smoke.sh:ro" \
+#     toolchain:smoke bash /ci/toolchain-smoke.sh
+# or `mise run toolchain-smoke`.
 set -euo pipefail
 mise ls --current
 gcc --version | head -n 1
@@ -29,4 +30,12 @@ miniserve --version
 zizmor --version
 actionlint --version
 shellcheck --version
-rustup run 1.85.0 rustc --version
+# The MSRV toolchain (mise.msrv.toml) is installed beside the default and
+# nothing else is: exactly two toolchains, and both run. The repo is not in the
+# image, so this avoids repeating the MSRV number; `mise run toolchain-check`
+# keeps the number itself consistent in the repo.
+toolchains=$(rustup toolchain list | cut -d " " -f 1)
+test "$(echo "$toolchains" | wc -l)" -eq 2
+for toolchain in $toolchains; do
+  rustup run "$toolchain" rustc --version
+done
