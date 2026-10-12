@@ -52,7 +52,7 @@ jobs:
           IMAGE: ${{ needs.toolchain.outputs.image }}
           TAG: ${{ needs.toolchain.outputs.tag }}
         run: echo "${TAG} = ${IMAGE}"
-      - uses: actions/checkout@v6.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           # The conventional commits check walks the PR's history.
