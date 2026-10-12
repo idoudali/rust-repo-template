@@ -49,8 +49,9 @@ x86_64-unknown-linux-musl = "ubuntu-26.04"
 global = "ubuntu-26.04"
 
 # Pin the actions in the generated release.yml to exact version tags, like
-# the other workflows. Dependabot does not edit this table: bump it with the
-# other actions, then `dist generate`.
+# the other workflows. Dependabot skips release.yml (see
+# .github/dependabot.yml) and does not edit this table: bump it by hand when
+# the other actions move, then run `mise run dist-generate`.
 [dist.github-action-commits]
 "actions/checkout" = "v6.1.0"
 "actions/upload-artifact" = "v7.0.2"
