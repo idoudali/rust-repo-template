@@ -57,7 +57,7 @@ jobs:
           persist-credentials: false
           # The conventional commits check walks the PR's history.
           fetch-depth: 0
-      - uses: Swatinem/rust-cache@v2.9.2
+      - uses: Swatinem/rust-cache@v2.9.3
       - run: mise ls --current && gcc --version | head -n 1
       # `mise run ci` is the same command you run locally. It runs the git
       # hooks (fmt, clippy, cargo deny, typos, rumdl, actionlint, shellcheck,

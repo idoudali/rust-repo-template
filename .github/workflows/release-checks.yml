@@ -42,12 +42,12 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v5.1.1
+      - uses: jdx/mise-action@v5.2.4
         with:
           version: 2026.10.4
           # Only what the checks need; the full manifest is for the image.
           install_args: rust cargo-binstall cargo:cargo-nextest
-      - uses: Swatinem/rust-cache@v2.9.2
+      - uses: Swatinem/rust-cache@v2.9.3
       # The system C compiler comes from the runner image, so pin what can be
       # pinned and print the rest: a runner image change shows up here.
       - name: Select Xcode
